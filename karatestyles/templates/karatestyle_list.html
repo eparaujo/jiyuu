@@ -1,0 +1,70 @@
+{% extends 'base.html'  %}
+
+{% block title %}
+SGK - Cadastro de Estilos de Karatê
+{% endblock %}
+
+{% block content %}
+
+<div class="row mb-3">
+
+    <div class="col-md-6">
+        <form method="get" action="{% url 'karatestyle_list' %}">
+            <div class="input-group">
+                <input type="text" class="form-control" name="name" placeholder="Estilo" value="{{ request.GET.name}}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-6">
+        <a href="{% url 'karatestyle_create' %}" class="btn btn-success float-end">
+            <i class="bi bi-plus"></i>Novo Estilo
+        </a>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nome do Estilo</th>
+                <th>Origem do Estilo</th>
+                <th>Bases</th>
+                <th>Quantidade de Katas</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for karatestyle in karatestyles %}
+                <tr>
+                    <td> {{ karatestyle.id }} </td>
+                    <td> {{ karatestyle.name }} </td>
+                    <td> {{ karatestyle.originstyle }} </td>
+                    <td> {{ karatestyle.bases }} </td>
+                    <td> {{ karatestyle.qtdekatas }} </td>
+                    <td> 
+                        <a href="{% url 'karatestyle_detail' karatestyle.id %}" class="btn btn-info btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a>                        
+                     
+                        <a href="{% url 'karatestyle_update' karatestyle.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        
+                        <a href="{% url 'karatestyle_delete' karatestyle.id %}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'components/_pagination.html' %}
+
+{% endblock %}

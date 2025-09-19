@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <div class="conteiner mt-4">
+        <h3 class="display-6">Excluir Dashboard</h3>
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text">Tem certeza que deseja excluir o Dasboard <strong>{{object.name}}</strong>?</p>
+
+                <form method="POST" class="form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger mt-3">Excluir</button>
+                </form>
+                <a href="{% url 'dashboard_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="display-6">Detalhes da Receita</h3>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">{{ object.name }}</h3>
+            <p class="card-text">Receita: <stong> {{ object.revenue }} </stong></p>
+            <p class="card-text">Total Receita: <stong> {{ object.value }} </stong></p>
+            <p class="card-text">Descrição: <stong> {{ object.description }} </stong></p>
+        </div>
+    </div>
+    <a href="{% url 'inflow_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+</div>
+
+{% endblock %}

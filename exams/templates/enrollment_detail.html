@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}SGK - Detalhe da Inscrição{% endblock %}
+{% block content %}
+<h4 class="mb-3">Inscrição #{{ object.id }}</h4>
+<table class="table table-bordered">
+  <tr><th>Exame</th><td>{{ object.exam.date|date:"d/m/Y" }} - {{ object.exam.dojo.tradename|default:object.exam.dojo }}</td></tr>
+  <tr><th>Karateca</th><td>{{ object.karateca }}</td></tr>
+  <tr><th>Graduação Atual</th><td>{{ object.current_graduation.name|default:"—" }}</td></tr>
+</table>
+
+<h5 class="mt-4">Resultados</h5>
+<ul class="list-group mb-3">
+  {% for r in object.results.all %}
+    <li class="list-group-item d-flex justify-content-between">
+      <span>{{ r.subject.name }}</span>
+      <span class="fw-bold">{{ r.score }}</span>
+    </li>
+  {% empty %}
+    <li class="list-group-item">Sem resultados registrados.</li>
+  {% endfor %}
+</ul>
+
+<div class="d-flex gap-2">
+  <a href="{% url 'enrollment_list' %}" class="btn btn-secondary">Voltar</a>
+  <a href="{% url 'enrollment_update' object.id %}" class="btn btn-warning">Editar</a>
+  <a href="{% url 'enrollment_delete' object.id %}" class="btn btn-danger">Excluir</a>
+</div>
+{% endblock %}

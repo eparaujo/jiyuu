@@ -1,0 +1,61 @@
+{% extends 'base.html'  %}
+
+{% block title %}
+SGK - Cadastro de Receitas
+{% endblock %}
+
+{% block content %}
+
+<div class="row mb-3">
+
+    <div class="col-md-6">
+        <form method="get" action="{% url 'revenue_list' %}">
+            <div class="input-group">
+                <input type="text" class="form-control" name="name" placeholder="Receita" value="{{ request.GET.name}}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-6">
+        <a href="{% url 'revenue_create' %}" class="btn btn-success float-end">
+            <i class="bi bi-plus"></i>Nova Receita
+        </a>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>                
+                <th>Categoria da Receita</th>
+                <th>Data de Vencimento</th> 
+            </tr>
+        </thead>
+        <tbody>
+            {% for revenue in revenues %}
+                <tr>
+                    <td> {{ revenue.id }} </td>                    
+                    <td> {{ revenue.type }} </td>                   
+                    <td> {{ revenue.duedate }} </td>
+                    <td> 
+                        <a href="{% url 'revenue_detail' revenue.id %}" class="btn btn-info btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a>                        
+                     
+                        <a href="{% url 'revenue_update' revenue.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'components/_pagination.html' %}
+
+{% endblock %}

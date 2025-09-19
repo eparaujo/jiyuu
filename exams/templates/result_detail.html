@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}SGK - Detalhe do Resultado{% endblock %}
+{% block content %}
+<h4 class="mb-3">Resultado #{{ object.id }}</h4>
+<table class="table table-bordered">
+  <tr><th>Exame</th><td>{{ object.enrollment.exam.date|date:"d/m/Y" }} - {{ object.enrollment.exam.dojo.tradename|default:object.enrollment.exam.dojo }}</td></tr>
+  <tr><th>Karateca</th><td>{{ object.enrollment.karateca }}</td></tr>
+  <tr><th>Matéria</th><td>{{ object.subject.name }}</td></tr>
+  <tr><th>Nota</th><td>{{ object.score }}</td></tr>
+</table>
+<div class="d-flex gap-2">
+  <a href="{% url 'result_list' %}" class="btn btn-secondary">Voltar</a>
+  <a href="{% url 'result_update' object.id %}" class="btn btn-warning">Editar</a>
+  <a href="{% url 'result_delete' object.id %}" class="btn btn-danger">Excluir</a>
+</div>
+{% endblock %}

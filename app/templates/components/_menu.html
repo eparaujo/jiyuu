@@ -1,0 +1,58 @@
+<div class="row flex-nowrap">
+    <div class="col-auto col-md-0 col-xl-0 px-0 bg-dark">
+      <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white">
+        <button class="btn btn-dark d-block d-sm-none mb-3" type="button" data-bs-toggle="collapse"
+          data-bs-target="#menuCollapse" aria-expanded="false" aria-controls="menuCollapse">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+        <div class="collapse d-sm-block" id="menuCollapse">
+          <ul class="nav flex-column align-items-start" id="menu">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-white" href="#" id="menuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-menu-button-wide fs-4"></i>
+                <span class="ms-1">Menu</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menuDropdown">
+                <li>
+                  <a class="dropdown-item" href="{% url 'home' %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'inflow_list' %}">
+                    <i class="bi bi-currency-exchange"></i> Entradas - Receitas
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'outflow_list' %}">
+                    <i class="bi bi-cart-check"></i> Saídas - Despesas
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'category_list' %}">
+                    <i class="bi bi-bookmarks"></i> Categorias - Despesas
+                  </a>
+                </li>
+                <!-- Adicione os demais links aqui -->
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                {% if user.is_authenticated %}
+                <li>
+                  <form action="{% url 'logout' %}" method="post" id="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">
+                      <i class="bi bi-box-arrow-right"></i> Sair
+                    </button>
+                  </form>
+                </li>
+                {% endif %}
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <hr>
+      </div>
+    </div>
+  </div>
+  

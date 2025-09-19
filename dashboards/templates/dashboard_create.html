@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="display-6">Cadastrar Dados do Dashboard</h3>
+
+    <div class="card w-100" style="max-width: 800px;">
+        <div class="card-body">
+            <form method="post" class="form">
+                {% csrf_token %} <!--formulário de post tem que ter o csrf_token -->
+                {{ form.as_p }} <!--chama a rendereização do form -->
+                <button type="submit" class="btn btn-primary">Gravar</button>
+            </form>
+        </div>
+
+    </div>
+    <a href="{% url 'dashboard_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+</div>
+
+{% endblock %} 

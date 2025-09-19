@@ -1,0 +1,139 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'home' %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'inflow_list' %}">
+              <i class="bi bi-currency-exchange"></i> Entradas - Receitas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'outflow_list' %}">
+              <i class="bi bi-cart-check"></i> Saídas - Despesas
+            </a>
+          </li>
+          
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-bookmarks"></i> Cadastros
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" href="{% url 'category_list' %}">
+                  <i class="bi bi-bookmarks"></i> Categorias - Despesas
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'kindrevenue_list' %}">
+                  <i class="bi bi-bookmarks-fill"></i> Tipos de Receitas
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'dojo_list' %}">
+                  <i class="bi bi-building-fill-gear"></i> Dojos
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'graduation_list' %}">
+                  <i class="bi bi-mortarboard"></i> Graduações
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'sensei_list' %}">
+                  <i class="bi bi-person-badge"></i> Senseis
+                </a>
+              </li>              
+              <li>
+                <a class="dropdown-item" href="{% url 'karateca_list' %}">
+                  <i class="bi bi-tags"></i> Karatecas
+                </a>
+              </li>              
+            </ul>
+          </li>
+        
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-award"></i> Eventos
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" href="{% url 'event_list' %}">
+                  <i class="bi bi-award-fill"></i> Eventos
+                </a>  
+              </li>
+            </ul>
+          </li>
+
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-award"></i> Dashboard
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" href="{% url 'dashboard_list' %}">
+                  <i class="bi bi-award-fill"></i> Dashboard
+                </a>  
+              </li>
+            </ul>
+          </li>
+
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-check-square-fill"></i> Exames
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" href="{% url 'exam_list' %}">
+                  <i class="bi bi-clipboard2-check"></i> Exame de Faixa
+                </a>  
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'enrollment_list' %}">
+                  <i class="bi bi-pen"></i> Incrições no Exame
+                </a>  
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'result_list' %}">
+                  <i class="bi bi-card-checklist"></i> Resultado do Exame
+                </a>  
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'requirement_list' %}">
+                  <i class="bi bi-mortarboard"></i> Materia do Exame
+                </a>  
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'subject_list' %}">
+                  <i class="bi bi-mortarboard-fill"></i> Nome da Materia do Exame
+                </a>  
+              </li> 
+            </ul>
+        </li> 
+        </ul>
+        <ul class="navbar-nav ms-auto">
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <form action="{% url 'logout' %}" method="post" id="logout-form">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-link nav-link text-white">
+                <i class="bi bi-box-arrow-right"></i> Sair
+              </button>
+            </form>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+  

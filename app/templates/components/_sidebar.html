@@ -1,0 +1,146 @@
+<div class="row flex-nowrap">
+    <div class="col-auto col-md-0 col-xl-0 px-0 bg-dark">
+      <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white">
+        <button class="btn btn-dark d-block d-sm-none mb-3" type="button" data-bs-toggle="collapse"
+          data-bs-target="#menuCollapse" aria-expanded="false" aria-controls="menuCollapse">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+        <div class="collapse d-sm-block" id="menuCollapse">
+          <ul class="nav flex-column align-items-start" id="menu">
+            <li>
+                <a href="{% url 'home' %}" class="nav-link px-0 align-middle">
+                  <i class="bi bi-speedometer2 fs-4"></i>
+                  <span class="ms-1">Dashboard</span>
+                </a>
+            </li>
+
+            <li>
+              <a href="{% url 'inflow_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-currency-exchange fs-4"></i>
+                <span class="ms-1">Entradas - Receitas</span>
+              </a>
+          </li>
+
+          <li>
+            <a href="{% url 'outflow_list' %}" class="nav-link px-0 align-middle">
+              <i class="bi bi-cart-check fs-4"></i>
+              <span class="ms-1">Saídas - Despesas</span>
+            </a>
+          </li>
+            
+            <li>
+                <a href="{% url 'category_list' %}" class="nav-link px-0 align-middle">
+                  <i class="bi bi-bookmarks fs-4"></i>
+                  <span class="ms-1">Categorias - Despesas</span>
+                </a>
+            </li>
+            
+            <li>
+              <a href="{% url 'kindrevenue_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-bookmarks-fill fs-4"></i>
+                <span class="ms-1">Tipos de Receitas</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'class_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-person-walking fs-4"></i>
+                <span class="ms-1">Aulas</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'dojo_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-building-fill-gear fs-4"></i>
+                <span class="ms-1">Dojos</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'sensei_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-person-badge fs-4"></i>
+                <span class="ms-1">Senseis</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'revenue_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-wallet2 fs-4"></i>
+                <span class="ms-1">Receitas</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'expense_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-wallet2 fs-4"></i>
+                <span class="ms-1">Despesas</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'genre_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-gender-ambiguous fs-4"></i>
+                <span class="ms-1">Gêneros</span>
+              </a>
+            </li>
+
+
+            <li>
+              <a href="{% url 'graduation_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-mortarboard fs-4"></i>
+                <span class="ms-1">Graduações</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'karateca_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-tags fs-4"></i>
+                <span class="ms-1">Karatecas</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'karatestyle_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-tags fs-4"></i>
+                <span class="ms-1">Estilos de Karatê</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'kata_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-tags fs-4"></i>
+                <span class="ms-1">Katas</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'posture_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-person-arms-up fs-4"></i>
+                <span class="ms-1">Posturas</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="{% url 'weekdays_list' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-calendar-date fs-4"></i>
+                <span class="ms-1">Dias da Semana</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" id="logout-form" class="nav-link px-0 align-middle">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-link text-decoration-none text-reset nav-link px-0 align-middle">
+                    <i class="bi bi-box-arrow-right fs-4 align-middle"></i>
+                    <span class="ms-1 align-middle">Sair</span>
+                  </button>
+                </form>
+              {% endif %}
+            </li>             
+           
+          </ul>
+        </div>
+        <hr>
+    </div>
+</div>

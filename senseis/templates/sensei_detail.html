@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="display-6">Informações do Sensei</h3>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">{{ object.name }}</h3>
+            <p class="card-text">CPF: {{ object.cpf }}</p>
+            <p class="card-text">Graduação: {{ object.graduation }}</p>
+            <p class="card-text">E-mail: {{ object.email }}</p>
+            <p class="card-text">Telefone Celuar: {{ object.celPhone }}</p>            
+            
+        </div>
+    </div>
+    <a href="{% url 'sensei_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+</div>
+
+{% endblock %}

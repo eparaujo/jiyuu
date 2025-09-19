@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}SGK - Nova Inscrição{% endblock %}
+{% block content %}
+<h4 class="mb-3">Nova Inscrição</h4>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <div class="d-flex gap-2">
+    <a href="{% url 'enrollment_list' %}" class="btn btn-secondary">Voltar</a>
+    <button type="submit" class="btn btn-success">Salvar</button>
+  </div>
+</form>
+{% endblock %}

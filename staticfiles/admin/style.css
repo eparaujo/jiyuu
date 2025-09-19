@@ -1,0 +1,8 @@
+body {
+    background-image: url('/static/images/shotokan.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh; /* Faz o fundo cobrir toda a altura da página */
+    margin: 0; /* Remove margens padrão */
+}

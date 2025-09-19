@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %} Jiyuu - Dashboard {% endblock %}
+
+{% block content %}
+    
+    <!--aqui estamos incluindo o campo de busca na tela-->
+    <div class="row mb-3"> <!--aqui estamos definindo uma linha na tela, que conterá o campo de pesquisa e botão para criar nova marca, cada uma em uma DIV-->
+        <div class="col-md-6">
+            <form method="get" action="{% url 'dashboard_list' %}"> <!--aqui o form com método get, aciona a url Client_lis (aquele name que incluimos na url)-->
+                <div class="input-group">
+                    <input type="text" class="form-control" name="name" placeholder="Dojo" value="{{ request.GET.tradename}}"> <!--class=form-control, deixa o controle/layout por conta do bootstrap-->
+                    <button type="submit" class="btn btn-primary"> <!--aqui é a definição do botão azul-->
+                        <i class="bi bi-search"></i> <!--ícone no botão igual a lupa-->
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+    </div>
+
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <!--aqui definimos as colunas da tabela, cada novo th é uma coluna nova-->
+                    <th>ID</th>
+                    <th>Dojo</th>
+                    <th>Alunos Ativos</th>
+                    <th>Último Exame</th>
+                    <th>N. Participantes</th>
+                    <th>N. Aprovados</th>
+                    <th>Karatecas</th>
+                    <th>Próx. Exame</th>
+                    <th>Incritos Próx. Exame</th>
+                    <th>Karatecas Inscritos</th>
+                    <th>Data</th>
+                    <th>Eventos</th>
+                    <th>Ações</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                {% for dashboard in dashboards %}
+                    <tr>
+                        <!--aqui definimos o conteúdo das colunas da tabela, cada novo th é uma coluna nova-->
+                        <td>{{ dashboard.id }}</td>
+                        <td>{{ dashboard.dojo }}</td>
+                        <td>{{ dashboard.active_students }}</td>
+                        <td>{{ dashboard.last_exam_date }}</td>
+                        <td>{{ dashboard.last_exam_participants }}</td>
+                        <td>{{ dashboard.last_exam_approved }}</td>
+                        <td>
+                            {% if dashboard.last_exam_students %}
+                                <ul class="mb-0">
+                                    {% for student in dashboard.last_exam_students %}
+                                        <li>
+                                            {{ student.name }}
+                                            {% if student.approved %}
+                                                ✅
+                                            {% else %}
+                                                ❌
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                Nenhum aluno
+                            {% endif %}
+                        </td>
+                        <td>{{ dashboard.next_exam_date }}</td>
+                        <td>{{ dashboard.next_exam_registered }}</td>                
+                        <td>
+                            {% if dashboard.next_exam_students %}
+                                <ul class="mb-0">
+                                    {% for student in dashboard.next_exam_students %}
+                                        <li>{{ student.name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                Nenhum inscrito
+                            {% endif %}
+                        </td>
+                        <td>{{ dashboard.next_exam_name }}</td>
+                        <td>
+                            {% if dashboard.upcoming_events %}
+                                <ul class="mb-0">
+                                    {% for event in dashboard.upcoming_events %}
+                                        <li>
+                                            <strong>{{ event.name}} </strong>
+                                            ({{ event.date}}) - Descrição:  {{ event.description}}
+                                            <em> - Organizador: {{ event.organizer }}</em>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                Nenhum evento
+                            {% endif %}
+                        </td>
+
+                        <td> 
+                        <a href="{% url 'dashboard_detail' dashboard.id %}" class="btn btn-info btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a>                        
+                     
+                        <a href="{% url 'dashboard_update' dashboard.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        
+                        <a href="{% url 'dashboard_delete' dashboard.id %}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% include 'components/_pagination.html' %} <!--aqui estamos incluindo o componente _pagination.html, e lá na view determinamos quantos registros serão mostrados por página-->
+
+{% endblock %}

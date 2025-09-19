@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="display-6">Detalhes Evento</h3>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="card-header">
+                <h5>Evento </h5>
+            </div>
+                <p class="card-title">Nome do Evento: {{ object.name }}</p>
+                <p class="card-text">Tipo: {{ object.kind }}</p>
+                <p class="card-text">Nível: {{ object.level }}</p>
+                <p class="card-text">Data do Evento: {{ object.date }}</p>
+                <p class="card-text">Hora de Início: {{ object.start_time }}</p>
+                <p class="card-text">Hora de Fim: {{ object.end_time }}</p>
+                <p class="card-text">Local: {{ object.local }}</p>
+                <p class="card-text">Endereço: {{ object.adress }}</p>
+                <p class="card-text">Descrição: {{ object.description }}</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="card-header">
+                <h5>Participantes & Organização</h5>
+            </div>
+            <p class="card-text">Graduação Habilitada para o Evento: {{ object.hability_graduation}}</p>
+            <p class="card-text">Categoria: {{ object.category}}</p>
+            <p class="card-text">Modalidades: {{ object.modalitiy}}</p>
+            <p class="card-text">Taxa de Inscrição: {{ object.registration_fee}}</p>
+            <p class="card-text">Data Limite para Inscrição: {{ object.limite_date}}</p>
+            <p class="card-text">Entidade Organizadora: {{ object.organizer}}</p>
+            <p class="card-text">Responsável: {{ object.event_organizer}}</p>
+            <p class="card-text">Status: {{ object.status}}</p>
+        </div>
+    </div>
+        </div>
+    </div>
+    <a href="{% url 'event_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+</div>
+
+{% endblock %}

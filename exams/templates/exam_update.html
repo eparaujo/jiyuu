@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}SGK - Editar Exame{% endblock %}
+{% block content %}
+<h4 class="mb-3">Editar Exame #{{ object.id }}</h4>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <div class="d-flex gap-2">
+    <a href="{% url 'exam_list' %}" class="btn btn-secondary">Voltar</a>
+    <button type="submit" class="btn btn-warning">Atualizar</button>
+  </div>
+</form>
+{% endblock %}

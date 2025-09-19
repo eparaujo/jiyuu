@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="display-6">Detalhes do Dojo</h3>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">{{ object.name }}</h3>
+            <p class="card-text">Categoria da receita: {{ object.type }}</p>
+            <p class="card-text">Data de Recebimento: {{ object.duedate }}</p>            
+        </div>
+    </div>
+    <a href="{% url 'revenue_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+</div>
+
+{% endblock %}

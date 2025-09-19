@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}SGK - Detalhe do Exame{% endblock %}
+{% block content %}
+
+<h4 class="mb-3">Exame #{{ object.id }}</h4>
+<table class="table table-bordered">
+  <tr><th>Dojo</th><td>{{ object.dojo.tradename|default:object.dojo }}</td></tr>
+  <tr><th>Data</th><td>{{ object.date|date:"d/m/Y" }}</td></tr>
+  <tr><th>Descrição</th><td>{{ object.description|default:"—" }}</td></tr>
+</table>
+
+<h5 class="mt-4">Requisitos</h5>
+<ul class="list-group mb-3">
+  {% for req in object.requirements.all %} 
+    <li class="list-group-item d-flex justify-content-between">
+      <span>{{ req.subject.name }} (mín: {{ req.min_score }}, máx: {{ req.max_score }})</span>
+    </li>
+  {% empty %}
+    <li class="list-group-item">Sem requisitos cadastrados.</li>
+  {% endfor %}
+</ul>
+ 
+<h5 class="mt-4">Inscrições</h5>
+<ul class="list-group mb-3">
+  {% for enr in object.enrollments.all %}
+    <li class="list-group-item">
+      <strong>{{ enr.karateca }}</strong> — {{ enr.current_graduation.name|default:"Sem graduação" }}
+    </li>
+  {% empty %}
+    <li class="list-group-item">Sem inscrições.</li>
+  {% endfor %}
+</ul>
+
+<div class="d-flex gap-2">
+  <a href="{% url 'exam_list' %}" class="btn btn-secondary">Voltar</a>
+  <a href="{% url 'exam_update' object.id %}" class="btn btn-warning">Editar</a>
+  <a href="{% url 'exam_delete' object.id %}" class="btn btn-danger">Excluir</a>
+</div>
+{% endblock %}

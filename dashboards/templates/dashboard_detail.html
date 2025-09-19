@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="display-6">Detalhes do Dashboard</h3>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="card-header">
+                <h5>Dados do Exame Realizado</h5>
+            </div>
+                <p class="card-title">Nome: {{ object.dojo }}</p>
+                <p class="card-text">Alunos Ativos: {{ object.active_students }}</p>
+                <p class="card-text">Data do Último Exame: {{ object.last_exam_date }}</p>
+                <p class="card-text">Participantes: {{ object.last_exam_participants }}</p>
+                <p class="card-text">Número de Aprovados: {{ object.last_exam_approved }}</p>
+                <p class="card-text">Nomes dos Karatecas: {{ object. }}</p>
+                
+        </div>        
+    </div>
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="card-header">
+                    <h5>Dados do Próximo Exame</h5>
+            </div>
+                <p class="card-text">Data:</strong> {{ object.next_exam_date }}</p>
+                <p class="card-text">Incritos Próx. Exame: {{ object.next_exam_registered }}</p>
+                <td>
+                    {% if dashboard.next_exam_students %}
+                        <ul class="mb-0">
+                            {% for student in dashboard.next_students %}
+                                <li>{{ student.name}}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        Nenhum inscrito
+                    {% endif %}
+                </td>
+                <p class="card-text">Nome do Exame: {{ object.next_exam_name }}</p>
+        </div>
+    </div>
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="card-header">
+                    <h5>Dados do Próximo Evento</h5>
+            </div>
+                <td>
+                    {% if dashboard.upcoming_events %}
+                        <ul class="mb-0">
+                            {% for event in dashboard.upcoming_events %}
+                                <li>
+                                    <strong>{{ event.name}} </strong>
+                                    ({{ event.date}}) - Descrição:  {{ event.description}}
+                                    <em> - Organizador: {{ event.organizer }}</em>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        Nenhum evento
+                    {% endif %}
+                </td>
+        </div>
+    </div>   
+    
+    
+
+    <a href="{% url 'dashboard_list' %}" class="btn btn-secondary mt-3">Voltar</a>
+
+    
+</div>
+
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}SGK - Inscrições em Exame{% endblock %}
+{% block content %}
+<div class="row mb-3">
+  <div class="col-md-6">
+    <form method="get" action="{% url 'enrollment_list' %}">
+      <div class="input-group">
+        <input type="text" class="form-control" name="karateca" placeholder="Filtrar por nome do karateca" value="{{ request.GET.karateca }}">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+      </div>
+    </form>
+  </div>
+  <div class="col-md-6">
+    <a href="{% url 'enrollment_create' %}" class="btn btn-success float-end"><i class="bi bi-plus"></i> Nova Inscrição</a>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-striped table-bordered">
+    <thead class="thead-dark">
+      <tr>
+        <th>ID</th>
+        <th>Exame</th>
+        <th>Karateca</th>
+        <th>Graduação Atual</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for enrollment in enrollments %}
+      <tr>
+        <td>{{ enrollment.id }}</td>
+        <td>{{ enrollment.exam.date|date:"d/m/Y" }} - {{ enrollment.exam.dojo.tradename|default:enrollment.exam.dojo }}</td>
+        <td>{{ enrollment.karateca }}</td>
+        <td>{{ enrollment.current_graduation.name|default:"—" }}</td>
+        <td>
+          <a href="{% url 'enrollment_detail' enrollment.id %}" class="btn btn-info btn-sm"><i class="bi bi-eye"></i></a>
+          <a href="{% url 'enrollment_update' enrollment.id %}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i></a>
+          <a href="{% url 'enrollment_delete' enrollment.id %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5">Nenhuma inscrição encontrada.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% include 'components/_pagination.html' %}
+{% endblock %}

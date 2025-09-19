@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="display-6">Detalhes das Despesas</h3>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">{{ object.name }}</h3>
+            <p class="card-text">Categoria da Despesa: {{ object.category }}</p>
+            <p class="card-text">Descrição: {{ object.description }}</p>            
+            <p class="card-text">Data de Vencimento: {{ object.duedate }}</p>
+            <p class="card-text">Pago?: {{ object.paid }}</p>                        
+            
+        </div>
+    </div>
+    <a href="{% url 'expense_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+</div>
+
+{% endblock %}

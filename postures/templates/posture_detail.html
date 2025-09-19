@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="display-6">Detalhes da Postura</h3>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">{{ object.name }}</h3>
+            <p class="card-text">Estilo: {{ object.style }}</p>
+            <p class="card-text">Descrição: {{ object.description }}</p>
+            <p class="card-text">Vídeo da Postura: {{ object.file }}</p>         
+            
+        </div>
+    </div>
+    <a href="{% url 'posture_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+</div>
+
+{% endblock %}

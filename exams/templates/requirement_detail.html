@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}SGK - Detalhe do Requisito{% endblock %}
+{% block content %}
+<h4 class="mb-3">Requisito #{{ object.id }}</h4>
+<table class="table table-bordered">
+  <tr><th>Exame</th><td>{{ object.exam.date|date:"d/m/Y" }} - {{ object.exam.dojo.tradename|default:object.exam.dojo }}</td></tr>
+  <tr><th>Matéria</th><td>{{ object.subject.name }}</td></tr>
+  <tr><th>Nota Mínima</th><td>{{ object.min_score }}</td></tr>
+  <tr><th>Nota Máxima</th><td>{{ object.max_score }}</td></tr>
+</table>
+<div class="d-flex gap-2">
+  <a href="{% url 'requirement_list' %}" class="btn btn-secondary">Voltar</a>
+  <a href="{% url 'requirement_update' object.id %}" class="btn btn-warning">Editar</a>
+  <a href="{% url 'requirement_delete' object.id %}" class="btn btn-danger">Excluir</a>
+</div>
+{% endblock %}

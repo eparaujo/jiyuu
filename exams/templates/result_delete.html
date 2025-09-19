@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}SGK - Excluir Resultado{% endblock %}
+{% block content %}
+<h4 class="mb-3">Excluir Resultado #{{ object.id }}</h4>
+<p>Tem certeza que deseja excluir este resultado?</p>
+<form method="post">
+  {% csrf_token %}
+  <div class="d-flex gap-2">
+    <a href="{% url 'result_list' %}" class="btn btn-secondary">Cancelar</a>
+    <button type="submit" class="btn btn-danger">Excluir</button>
+  </div>
+</form>
+{% endblock %}

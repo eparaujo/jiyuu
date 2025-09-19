@@ -1,0 +1,73 @@
+{% extends 'base.html'  %}
+
+{% block title %}
+SGK - Cadastro de Senseis
+{% endblock %}
+
+{% block content %}
+
+<div class="row mb-3">
+
+    <div class="col-md-6">
+        <form method="get" action="{% url 'dojo_list' %}">
+            <div class="input-group">
+                <input type="text" class="form-control" name="name" placeholder="Nome do Sensei" value="{{ request.GET.name}}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-6">
+        <a href="{% url 'sensei_create' %}" class="btn btn-success float-end">
+            <i class="bi bi-plus"></i>Novo Sensei
+        </a>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Graduação</th>
+                <th>E-mail</th>
+                <th>Celular-Whatsapp</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sensei in senseis %}
+                <tr>
+                    <td> {{ sensei.id }} </td>
+                    <td> {{ sensei.name }} </td>
+                    <td> {{ sensei.cpf }} </td>
+                    <td> {{ sensei.graduation }} </td>
+                    <td> {{ sensei.email }} </td>
+                    <td> {{ sensei.celPhone }} </td>
+
+                    <td> 
+                        <a href="{% url 'sensei_detail' sensei.id %}" class="btn btn-info btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a>                        
+                     
+                        <a href="{% url 'sensei_update' sensei.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        
+                        <a href="{% url 'sensei_delete' sensei.id %}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'components/_pagination.html' %}
+
+{% endblock %}

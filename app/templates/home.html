@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Gestão de Dojos
+{% endblock %}
+
+{% block content %}
+    
+    {% include 'components\_karateca_metrics.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <div class="row mt-4 justify-content-center"> <!-- linha de tamanho 4 -->
+  
+      <div class="col-md-6 text-center"> <!-- coluna dentro da linha para abrigar um gráfico -->
+        <h5 class="text-center mb-3">Valores de Despesas (Últimos 30 dias)</h5>
+        <canvas id="dailyExpensesChart"></canvas>
+      </div>
+  
+      <div class="col-md-6 text-center"> <!-- coluna dentro da linha para abrigar um gráfico -->
+        <h5 class="text-center mb-3">Valores de Receitas (Últimos 30 dias)</h5>
+        <canvas id="dailyRevenuesChart"></canvas>
+      </div>
+      
+      <!-- o script abaixo, monta o gráfico recebendo os dados da view -->
+      <script> 
+         document.addEventListener("DOMContentLoaded", function() {
+          var dailyExpensesData = JSON.parse('{{ daily_expenses_data|safe }}'); 
+          var dailyRevenuesData = JSON.parse('{{ daily_revenues_data|safe }}');
+          
+          
+          var ctxDailyExpenses = document.getElementById('dailyExpensesChart').getContext('2d');
+          var dailyExpensesChart = new Chart(ctxDailyExpenses, {
+            type: 'line',
+            data: {
+              labels: dailyExpensesData.dates,
+              datasets: [{
+                label: 'Valor em Despesas',
+                data: dailyExpensesData.values,
+                fill: false,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                tension: 0.5
+              }]
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+          
+  
+         var ctxDailyRevenues = document.getElementById('dailyRevenuesChart').getContext('2d');
+         var dailyRevenuesChart = new Chart(ctxDailyRevenues, {
+            type: 'bar',
+            data: {
+              labels: dailyRevenuesData.dates,
+              datasets: [{
+                label: 'Receitas',
+                data: dailyRevenuesData.values,
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+        });
+  
+      </script>    
+
+{% endblock %}

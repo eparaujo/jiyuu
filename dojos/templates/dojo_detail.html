@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="display-6">Detalhes do Dojo</h3>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">{{ object.razaosocial }}</h3>
+            <h3 class="card-text">Dojo: {{ object.tradename }}</h3>
+            <p class="card-text">URL Site: {{ object.site }}</p>
+            <p class="card-text">E-mail: {{ object.email }}</p>
+            <p class="card-text">Celular-Whatsapp: {{ object.whatsapp }}</p>
+            <p class="card-text">Telefone Fixo: {{ object.phone }}</p>
+            <p class="card-text">Rua: {{ object.street }}</p>
+            <p class="card-text">Número: {{ object.number }}</p>
+            <p class="card-text">CEP: {{ object.zipcode }}</p>
+            <p class="card-text">Bairro: {{ object.district }}</p>
+            <p class="card-text">Cidade: {{ object.city }}</p>
+            <p class="card-text">Estado: {{ object.state }}</p>
+            <p class="card-text">País: {{ object.country }}</p>
+            <p class="card-text">Aulas: {{ object.aulas }}</p>
+            <p class="card-text">Senseis: {{ object.sensei }}</p>
+            
+            
+        </div>
+    </div>
+    <a href="{% url 'dojo_list' %}" class="btn btn-secondary mt-3">Cancelar e Voltar</a>
+</div>
+
+{% endblock %}
