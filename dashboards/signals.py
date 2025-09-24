@@ -10,7 +10,7 @@ from events.models import Event
 from dojos.models import Dojo
 from dashboards.models import Dashboard
 
-# 🔹 Importa Karateca para contar alunos ativos
+# 🔹 Importa Karateca para contar alunos ativos 
 from karatecas.models import Karateca
 
 
@@ -81,10 +81,21 @@ def update_dashboard(dojo):
     """
     dashboard, _ = Dashboard.objects.get_or_create(dojo=dojo)
 
-    # ---------- 🔹 Contagem de alunos ativos ----------
-    # Busca Karatecas vinculados ao dojo, cujo campo active == "ATIVO"
-    active_count = Karateca.objects.filter(dojo=dojo, active="ATIVO").count()
-    dashboard.active_students = active_count
+    @receiver(post_save, sender=Karateca)
+    @receiver(post_delete, sender=Karateca)
+    def refresh_dashboard_for_karateca(sender, instance, **kwargs):
+        """
+        Atualiza o campo active_students no Dashboard sempre que um Karateca
+        for criado, atualizado (status alterado) ou excluído.
+        """
+        dojo = instance.dojo
+        if dojo:
+            # Recalcula total de alunos ativos (status == "ATIVO")
+            active_count = Karateca.objects.filter(dojo=dojo, active="ATIVO").count()
+
+            dashboard, _ = Dashboard.objects.get_or_create(dojo=dojo)
+            dashboard.active_students = active_count
+            dashboard.save()
 
     # ---------- Último exame ----------
     last_exam = Exam.objects.filter(dojo=dojo).order_by("-date").first()

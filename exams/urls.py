@@ -8,6 +8,8 @@ urlpatterns = [
     path('exams/<int:pk>/detail/', views.ExamDetailView.as_view(), name='exam_detail'),
     path('exams/<int:pk>/update/', views.ExamUpdateView.as_view(), name='exam_update'),
     path('exams/<int:pk>/delete/', views.ExamDeleteView.as_view(), name='exam_delete'),
+    # urls para serem usadas via API no flutter
+    path('api/v1/exams/<int:pk>/', views.ExamRetrieveUpdateDestroyAPIView.as_view(), name='exam-detail-api-view'),
 
     path('subjects/list/', views.ExamSubjectListView.as_view(), name='subject_list'),
     path('subjects/create/', views.ExamSubjectCreateView.as_view(), name='subject_create'),

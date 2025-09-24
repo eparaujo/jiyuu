@@ -6,6 +6,8 @@ from django.views.generic import ListView, CreateView, DetailView, DeleteView, U
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from . import models, forms
+from rest_framework import generics
+from . import serializers
 
 
 # -------------------------------
@@ -216,3 +218,7 @@ class ExamResultDeleteView(LoginRequiredMixin, DeleteView):
     model = models.ExamResult
     template_name = "result_delete.html"
     success_url = reverse_lazy("result_list")
+
+class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = models.Exam.objects.all()
+    serializer_class = serializers.ExamSerializer
