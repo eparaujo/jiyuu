@@ -4,10 +4,13 @@ from django.db.models.query import QuerySet
 from django.shortcuts import render
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
 from django.urls import reverse_lazy
+from rest_framework.response import Response
+from rest_framework import status
 from django.contrib.auth.mixins import LoginRequiredMixin
 from . import models, forms
 from rest_framework import generics
 from . import serializers
+from rest_framework.views import APIView
 
 
 # -------------------------------
@@ -50,6 +53,48 @@ class ExamDeleteView(LoginRequiredMixin, DeleteView):
     model = models.Exam
     template_name = "exam_delete.html"
     success_url = reverse_lazy("exam_list")
+
+
+class ExamDetailAPIView(LoginRequiredMixin, APIView):
+    """
+    Retorna os dados completos de um exame em formato JSON,
+    incluindo inscritos e matérias com notas mínimas e máximas.
+    """
+
+    def get(self, request, pk):
+        try:
+            # Busca o exame pelo ID
+            exam = models.Exam.objects.get(pk=pk)
+        except models.Exam.DoesNotExist:
+            return Response({"error": "Exame não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Monta lista de requisitos (matérias do exame)
+        requirements = []
+        for req in exam.requirements.all():
+            requirements.append({
+                "subject": req.subject.name,
+                "min_score": req.min_score,
+                "max_score": req.max_score,
+            })
+
+        # Monta lista de karatecas inscritos
+        participants = []
+        for enrollment in exam.enrollments.all():
+            participants.append({
+                "id": enrollment.karateca.id,
+                "name": str(enrollment.karateca),
+                "subjects": requirements,  # Cada karateca tem as mesmas matérias definidas para o exame
+            })
+
+        # Estrutura final do JSON
+        data = {
+            "id": exam.id,
+            "date": exam.date,
+            "name": exam.description,
+            "participants": participants,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 # -------------------------------
