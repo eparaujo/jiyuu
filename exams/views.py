@@ -72,6 +72,7 @@ class ExamDetailAPIView(LoginRequiredMixin, APIView):
         requirements = []
         for req in exam.requirements.all():
             requirements.append({
+                "id": req.id,
                 "subject": req.subject.name,
                 "min_score": req.min_score,
                 "max_score": req.max_score,
@@ -264,6 +265,10 @@ class ExamResultDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "result_delete.html"
     success_url = reverse_lazy("result_list")
 
-class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+class ExamCreateListAPIView(generics.ListCreateAPIView):
     queryset = models.Exam.objects.all()
     serializer_class = serializers.ExamSerializer
+
+class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = models.Exam.objects.all()
+    serializer_class = serializers.ExamSerializer 
