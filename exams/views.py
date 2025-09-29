@@ -233,7 +233,7 @@ class ExamResultListView(LoginRequiredMixin, ListView):
     model = models.ExamResult
     template_name = "result_list.html"
     context_object_name = "results"
-    paginate_by = 10
+    paginate_by = 15
 
     def get_queryset(self):
         queryset = super().get_queryset()
