@@ -9,18 +9,20 @@ from . import models
 class ExamForm(forms.ModelForm):
     class Meta:
         model = models.Exam
-        fields = ["dojo", "date", "description"]
+        fields = ["dojo", "date", "description", "status"]
         widgets = {
             "dojo": forms.Select(attrs={"class": "form-control"}),
             "date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "status": forms.Select(attrs={"class": "form-control"}),
         }
         labels = {
             "dojo": "Dojo",
             "date": "Data do Exame",
             "description": "Descrição / Observações",
+            "status": "Status do Exame",
         }
-
+ 
 
 # -------------------------------
 # EXAM SUBJECT

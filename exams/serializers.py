@@ -2,27 +2,28 @@ from rest_framework import serializers
 from .models import Exam, ExamEnrollment, ExamResult, ExamRequirement
 
 
-# -----------------------------------------------------------------------------
-# Serializer para resultados individuais (input/output das notas e comentários)
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------  
+# Serializer para resultados individuais (input/output das notas e comentários)  
+# -----------------------------------------------------------------------------  
 class ExamResultSerializer(serializers.ModelSerializer):
     subject_name = serializers.CharField(source="subject.name", read_only=True)  # nome da matéria
 
     class Meta:
         model = ExamResult
-        fields = ["id", "subject", "subject_name", "score", "comments"]
+        fields = ["id", "subject", "subject_id", "subject_name", "score", "comments"]
 
 
-# -----------------------------------------------------------------------------
-# Serializer para as matérias (requirements) de cada exame
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------  
+# Serializer para as matérias (requirements) de cada exame  
+# -----------------------------------------------------------------------------  
 class ExamRequirementWithResultSerializer(serializers.ModelSerializer):
+    subject_id = serializers.IntegerField(source="subject.id", read_only=True)  # 🔹 ID real da matéria
     subject_name = serializers.CharField(source="subject.name", read_only=True)  # nome da matéria (ex: Kihon, Kata)
     score = serializers.SerializerMethodField()  # nota do karateca (ou 0 se não existir)
 
     class Meta:
         model = ExamRequirement
-        fields = ["subject_name", "min_score", "max_score", "score"]
+        fields = ["subject_id", "subject_name", "min_score", "max_score", "score"]
 
     def get_score(self, obj):
         """
@@ -42,9 +43,9 @@ class ExamRequirementWithResultSerializer(serializers.ModelSerializer):
         return result.score if result else 0
 
 
-# -----------------------------------------------------------------------------
-# Serializer para os participantes do exame (karatecas inscritos)
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------  
+# Serializer para os participantes do exame (karatecas inscritos)  
+# -----------------------------------------------------------------------------  
 class ExamEnrollmentSerializer(serializers.ModelSerializer):
     karateca_name = serializers.CharField(source="karateca.name", read_only=True)  # nome do karateca
     karateca_graduation = serializers.CharField(
@@ -118,39 +119,38 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-# -----------------------------------------------------------------------------
-# Serializer principal do exame
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------  
+# Serializer principal do exame  
+# -----------------------------------------------------------------------------  
 class ExamSerializer(serializers.ModelSerializer):
-    dojo_name = serializers.CharField(source="dojo.tradename", read_only=True)  # nome do dojo
+    dojo_name = serializers.CharField(source="dojo.tradename", read_only=True)
     participants = ExamEnrollmentSerializer(
         source="enrollments",
-        many=True
-    )  # lista de karatecas inscritos
+        many=True,
+        read_only=True  # 🔹 evita AssertionError
+    )
 
     class Meta:
         model = Exam
-        fields = [
-            "id",
-            "dojo",
-            "dojo_name",
-            "date",
-            "description",
-            "participants",
-        ]
+        fields = ["id", "dojo", "dojo_name", "date", "description", "participants"]
 
     def update(self, instance, validated_data):
         """
-        Atualiza participantes e seus resultados.
+        Atualiza participantes e seus resultados via nested manual.
         """
-        participants_data = validated_data.pop("enrollments", None)
+        participants_data = self.context['request'].data.get("participants", None)  # ✅ pega do request.data
 
         if participants_data:
             for participant_data in participants_data:
                 participant_id = participant_data.get("id")
                 if participant_id:
                     enrollment = ExamEnrollment.objects.get(id=participant_id)
-                    serializer = ExamEnrollmentSerializer(enrollment, data=participant_data, partial=True)
+                    serializer = ExamEnrollmentSerializer(
+                        enrollment,
+                        data=participant_data,
+                        partial=True,
+                        context={'request': self.context['request']}
+                    )
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
 

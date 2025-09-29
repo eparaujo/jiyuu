@@ -7,11 +7,11 @@ from .models import Exam, ExamSubject, ExamRequirement, ExamEnrollment, ExamResu
 @admin.register(Exam)  # Registra o modelo Exam no Django Admin
 class ExamAdmin(admin.ModelAdmin):
     # Define quais campos serão exibidos na lista do Admin
-    list_display = ("dojo", "date", "description")
+    list_display = ("dojo", "date", "description", "status")
     # Permite filtrar a lista no Admin pelos campos definidos
     list_filter = ("dojo", "date")
     # Habilita a pesquisa por nome do dojo (tradename) e descrição
-    search_fields = ("dojo__tradename", "description")
+    search_fields = ("dojo__tradename", "description", "status")
 
 
 # ============================

@@ -7,25 +7,26 @@ from graduations.models import Graduation
 # ======================================================
 # Modelo principal que representa um Exame de Faixa
 # ======================================================
+
+STATUS_EXAM = [
+    ('AGENDADO', 'Agendado'),
+    ('CONFIRMADO', 'Confirmado'),
+    ('CANCELADO', 'Cancelado'),
+    ('FINALIZADO', 'Finalizado'),
+]
 class Exam(models.Model):
     """Exame de faixa em uma data específica"""
 
     # Um exame pertence a um dojo específico
-    dojo = models.ForeignKey(
-        Dojo,
-        on_delete=models.CASCADE,
-        related_name="exams"  # permite acessar todos os exames com dojo.exams.all()
-    )
-
+    dojo = models.ForeignKey(Dojo, on_delete=models.CASCADE, related_name="exams")# permite acessar todos os exames com dojo.exams.all()
     date = models.DateField()  # Data marcada do exame
     description = models.TextField(blank=True, null=True)  # Descrição opcional do exame
-
     # Participantes são karatecas, mas o relacionamento é feito via tabela intermediária ExamEnrollment
-    participants = models.ManyToManyField(
-        Karateca,
+    participants = models.ManyToManyField(Karateca,
         through="ExamEnrollment",       # Usa a tabela ExamEnrollment para guardar mais detalhes da inscrição
         related_name="exams"            # permite acessar todos os exames de um karateca com karateca.exams.all()
     )
+    status = models.CharField(max_length=60, choices=STATUS_EXAM, blank=True, null=True)
 
     def __str__(self):
         # Exibição amigável no Django Admin e console
@@ -57,13 +58,8 @@ class ExamRequirement(models.Model):
         on_delete=models.CASCADE,
         related_name="requirements"  # exam.requirements.all() retorna todas exigências do exame
     )
-
     # Relacionamento com a matéria
-    subject = models.ForeignKey(
-        ExamSubject,
-        on_delete=models.CASCADE
-    )
-
+    subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE)
     # Notas máxima e mínima para a matéria neste exame
     max_score = models.PositiveIntegerField(default=0)
     min_score = models.PositiveIntegerField(default=0)
@@ -78,23 +74,11 @@ class ExamRequirement(models.Model):
 class ExamEnrollment(models.Model):
     """Inscrição de um karateca em um exame"""
 
-    exam = models.ForeignKey(
-        Exam,
-        on_delete=models.CASCADE,
-        related_name="enrollments"   # exam.enrollments.all() retorna todos inscritos
-    )
+    exam = models.ForeignKey(Exam,on_delete=models.CASCADE, related_name="enrollments")   # exam.enrollments.all() retorna todos inscritos
 
-    karateca = models.ForeignKey(
-        Karateca,
-        on_delete=models.CASCADE,
-        related_name="exam_enrollments"  # karateca.exam_enrollments.all() retorna todas inscrições do aluno
-    )
+    karateca = models.ForeignKey(Karateca, on_delete=models.CASCADE,  related_name="exam_enrollments")# karateca.exam_enrollments.all() retorna todas inscrições do aluno
 
-    current_graduation = models.ForeignKey(
-        Graduation,
-        on_delete=models.SET_NULL,   # se a graduação for apagada, mantém null
-        null=True
-    )
+    current_graduation = models.ForeignKey(Graduation, on_delete=models.SET_NULL, null=True)   # se a graduação for apagada, mantém null
 
     # Marca se o aluno foi aprovado ou não no exame
     approved = models.BooleanField(

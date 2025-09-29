@@ -36,5 +36,6 @@ urlpatterns = [
      # urls para serem usadas via API no flutter
     path('api/v1/exams/<int:pk>/', views.ExamRetrieveUpdateDestroyAPIView.as_view(), name='exam-update-api'),
     path('api/v1/list/<int:pk>/', views.ExamCreateListAPIView.as_view(), name='exam-create-list-api'),
-    #path('api/v1/exams/<int:pk>/', views.ExamCreateListAPIView.as_view(), name='exam-create-list-api'),
+    path("api/v1/enrollments/<int:pk>/", views.ExamEnrollmentUpdateAPIView.as_view(), name="exam-enrollment-update"),
+
 ]

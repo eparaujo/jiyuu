@@ -5,7 +5,7 @@ from genres.models import Genre
 from revenues.models import Revenue
 
 class Karateca(models.Model):
-
+ 
     STATUS = [
         ('ATIVO', 'Ativo'),
         ('AFASTADO', 'Afastado'),

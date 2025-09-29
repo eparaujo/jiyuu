@@ -10,7 +10,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from . import models, forms
 from rest_framework import generics
 from . import serializers
+from .serializers import ExamResultSerializer, ExamRequirementWithResultSerializer, ExamEnrollmentSerializer, ExamSerializer, ExamEnrollmentSerializer
 from rest_framework.views import APIView
+from .models import ExamEnrollment
 
 
 # -------------------------------
@@ -28,7 +30,7 @@ class ExamListView(LoginRequiredMixin, ListView):
         if description:
             queryset = queryset.filter(description__icontains=description)
         return queryset
-
+ 
 
 class ExamCreateView(LoginRequiredMixin, CreateView):
     model = models.Exam
@@ -239,7 +241,8 @@ class ExamResultListView(LoginRequiredMixin, ListView):
         if subject:
             queryset = queryset.filter(subject__name__icontains=subject)
         return queryset
-
+    
+    
 
 class ExamResultCreateView(LoginRequiredMixin, CreateView):
     model = models.ExamResult
@@ -272,3 +275,9 @@ class ExamCreateListAPIView(generics.ListCreateAPIView):
 class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = models.Exam.objects.all()
     serializer_class = serializers.ExamSerializer 
+
+
+ # API específica para salvar notas de um participante
+class ExamEnrollmentUpdateAPIView(generics.RetrieveUpdateAPIView):
+    queryset = ExamEnrollment.objects.all()
+    serializer_class = ExamEnrollmentSerializer   
