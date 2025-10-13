@@ -85,16 +85,18 @@ class ExamEnrollmentForm(forms.ModelForm):
 class ExamResultForm(forms.ModelForm):
     class Meta:
         model = models.ExamResult
-        fields = ["enrollment", "subject", "score", "comments"]
+        fields = ["enrollment", "subject", "score", "comments", "sensei_examiner"]
         widgets = {
             "enrollment": forms.Select(attrs={"class": "form-control"}),
             "subject": forms.Select(attrs={"class": "form-control"}),
             "score": forms.NumberInput(attrs={"class": "form-control"}),
             "comments": forms.Textarea(attrs={"class": "form-control"}),
+            "sensei_examiner": forms.Select(attrs={"class": "form-control"}),
         }
         labels = {
             "enrollment": "Inscrição (Aluno no Exame)",
             "subject": "Matéria",
             "score": "Nota",
             "comments": "Comentários",
+            "sensei_examiner": "Sensei Examinador",
         }

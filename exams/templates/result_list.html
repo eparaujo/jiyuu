@@ -30,7 +30,11 @@
               {% for result in group.list %}
                 <li>
                   - {{ result.subject.name }} | Nota: {{ result.score }} | 
-                  Comentário: {{ result.comments|default:"Sem comentários" }}
+                  Comentário: {{ result.comments|default:"Sem comentários" }} 
+                  {% if result.sensei_examiner %}
+                    | Examinador: {{ result.sensei_examiner.name }}
+                  {% endif %}
+
                 </li>
               {% endfor %}
             </ul>

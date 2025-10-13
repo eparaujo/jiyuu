@@ -5,7 +5,7 @@ from dashboards.models import Dashboard
 
 class DashboardSerializer(serializers.ModelSerializer):
     # nome do sensei associado ao dojo (relacionamento direto -> dojo.sensei.username)
-    senseiName = serializers.CharField(source="dojo.sensei.username", read_only=True)
+    sensei_name = serializers.CharField(source="dojo.sensei.username", read_only=True)
 
     # dojoName é um campo calculado via método (tradename > razaosocial)
     dojoName = serializers.SerializerMethodField()
@@ -22,9 +22,8 @@ class DashboardSerializer(serializers.ModelSerializer):
         model = Dashboard
         fields = [
             "id",
-            "dojo",
             "dojoName",
-            "senseiName",
+            "sensei_name",
             "active_students",           
             "last_exam_date",
             "last_exam_participants",
@@ -39,6 +38,7 @@ class DashboardSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+   
     def get_dojoName(self, obj):
         """
         Retorna o nome fantasia do dojo se existir,
@@ -81,6 +81,12 @@ class DashboardSerializer(serializers.ModelSerializer):
             )
         return structured
 
+    def get_sensei_name(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return request.user.get_full_name() or request.user.username
+        return "Sensei"
+    
     def get_next_exam_id(self, obj):
         """
         Extrai o id do próximo exame a partir do JSON armazenado em next_exam_students.

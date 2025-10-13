@@ -13,6 +13,7 @@ from . import serializers
 from .serializers import ExamResultSerializer, ExamRequirementWithResultSerializer, ExamEnrollmentSerializer, ExamSerializer, ExamEnrollmentSerializer
 from rest_framework.views import APIView
 from .models import ExamEnrollment
+from senseis.models import Sensei
 
 
 # -------------------------------
@@ -24,7 +25,7 @@ class ExamListView(LoginRequiredMixin, ListView):
     context_object_name = "exams"
     paginate_by = 10
 
-    def get_queryset(self):
+    def get_queryset(self): 
         queryset = super().get_queryset()
         description = self.request.GET.get("description")
         if description:
@@ -236,12 +237,36 @@ class ExamResultListView(LoginRequiredMixin, ListView):
     paginate_by = 15
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        """
+        Retorna a lista de resultados de exame com filtros opcionais.
+        Inclui relacionamentos necessários para evitar consultas extras.
+        """
+        # 🔹 Identifica o sensei examinador vinculado ao usuário logado
+        user = self.request.user
+        email = user.email
+
+        # 🔹 Busca o Sensei associado ao usuário (se existir)
+        #from senseis.models import Sensei  # ajuste o import conforme o nome da sua app
+        sensei_examiner = Sensei.objects.filter(user=user).all()
+        
+        # 🔹 Otimiza consultas com joins relacionados
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("enrollment__karateca", "subject")
+        )
+
+        # 🔹 Filtro opcional por nome da matéria
         subject = self.request.GET.get("subject")
         if subject:
             queryset = queryset.filter(subject__name__icontains=subject)
+
+        # 🔹 Se quiser filtrar apenas resultados do sensei logado:
+        if sensei_examiner:
+            queryset = queryset.filter(sensei_examiner=sensei_examiner)
+
         return queryset
-    
+     
     
 
 class ExamResultCreateView(LoginRequiredMixin, CreateView):
@@ -280,4 +305,9 @@ class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
  # API específica para salvar notas de um participante
 class ExamEnrollmentUpdateAPIView(generics.RetrieveUpdateAPIView):
     queryset = ExamEnrollment.objects.all()
-    serializer_class = ExamEnrollmentSerializer   
+    serializer_class = ExamEnrollmentSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context

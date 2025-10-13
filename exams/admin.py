@@ -54,9 +54,9 @@ class ExamEnrollmentAdmin(admin.ModelAdmin):
 # ============================
 @admin.register(ExamResult)  # Registra o modelo ExamResult
 class ExamResultAdmin(admin.ModelAdmin):
-    # Exibe matrícula (inscrição), disciplina e nota obtida
-    list_display = ("enrollment", "subject", "score")
-    # Permite filtrar por disciplina e nota
-    list_filter = ("subject", "score")
-    # Permite pesquisar pelo nome do karateca através da inscrição
-    search_fields = ("enrollment__karateca__name",)
+    # Exibe matrícula (inscrição), disciplina, nota e examinador
+    list_display = ("enrollment", "subject", "score", "sensei_examiner")
+    # Permite filtrar por disciplina, nota e examinador
+    list_filter = ("subject", "score", "sensei_examiner")
+    # Permite pesquisar pelo nome do karateca ou do examinador
+    search_fields = ("enrollment__karateca__name", "sensei_examiner__name")

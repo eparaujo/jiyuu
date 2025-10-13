@@ -38,6 +38,7 @@ class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request, *args, **kwargs):
+
         try:
             dashboard = Dashboard.objects.first()  # ou filtrar pelo usuário, dojo etc.
             serializer = DashboardSerializer(dashboard)

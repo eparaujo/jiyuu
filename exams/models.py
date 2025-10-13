@@ -2,6 +2,7 @@ from django.db import models
 from dojos.models import Dojo
 from karatecas.models import Karateca
 from graduations.models import Graduation
+from senseis.models import Sensei
 
 
 # ======================================================
@@ -91,7 +92,7 @@ class ExamEnrollment(models.Model):
 
 
 # ======================================================
-# Modelo que armazena a nota do aluno em cada matéria
+# Modelo que armazena a nota do aluno em cada matéria, e examinador
 # ======================================================
 class ExamResult(models.Model):
     """Nota de cada aluno em cada matéria"""
@@ -104,6 +105,7 @@ class ExamResult(models.Model):
 
     score = models.PositiveIntegerField()  # Nota obtida
     comments = models.TextField(max_length=250, blank=True, null=True)
+    sensei_examiner = models.CharField(max_length=250, blank=True, null=True)
 
     def __str__(self):
         return f"{self.enrollment.karateca} - {self.subject}: {self.score}"

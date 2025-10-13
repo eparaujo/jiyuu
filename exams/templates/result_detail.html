@@ -8,6 +8,7 @@
   <tr><th>Matéria</th><td>{{ object.subject.name }}</td></tr>
   <tr><th>Nota</th><td>{{ object.score }}</td></tr>
   <tr><th>Observações</th><td>{{ object.comments }}</td></tr>
+  <tr><th>Examinador</th><td>{{ object.sensei_examiner }}</td></tr>
 </table>
 <div class="d-flex gap-2">
   <a href="{% url 'result_list' %}" class="btn btn-secondary">Voltar</a>

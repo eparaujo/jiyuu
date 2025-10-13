@@ -1,16 +1,28 @@
 from rest_framework import serializers
 from .models import Exam, ExamEnrollment, ExamResult, ExamRequirement
-
+from senseis.models import Sensei
 
 # -----------------------------------------------------------------------------  
 # Serializer para resultados individuais (input/output das notas e comentários)  
 # -----------------------------------------------------------------------------  
 class ExamResultSerializer(serializers.ModelSerializer):
     subject_name = serializers.CharField(source="subject.name", read_only=True)  # nome da matéria
+    sensei_examiner_name = serializers.CharField(
+        source="sensei_examiner.name", read_only=True
+    )  # nome do examinador (sensei responsável)
 
     class Meta:
         model = ExamResult
-        fields = ["id", "subject", "subject_id", "subject_name", "score", "comments"]
+        fields = [
+            "id",
+            "subject",
+            "subject_id",
+            "subject_name",
+            "score",
+            "comments",
+            "sensei_examiner",         # 🔹 campo de vínculo (para gravação)
+            "sensei_examiner_name",    # 🔹 campo auxiliar somente leitura
+        ]
 
 
 # -----------------------------------------------------------------------------  
@@ -101,9 +113,21 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """
         Atualiza notas (results) do participante.
+        Também grava o nome do sensei examinador autenticado.
         """
         results_data = validated_data.pop("results", None)
+        request = self.context.get("request")  # pega o request da view
+        sensei_name = None
 
+        # 🔹 Captura o nome do usuário logado
+        if request and hasattr(request, "user") and request.user.is_authenticated:
+            sensei_name = request.user.get_full_name() or request.user.username
+            print("Sensei autenticado:", sensei_name)
+        else:
+            print("⚠️ Nenhum usuário autenticado encontrado no request.")
+            sensei_name = "Desconhecido"
+
+        # 🔹 Atualiza ou cria os resultados (notas)
         if results_data:
             for result_data in results_data:
                 subject = result_data["subject"]
@@ -113,7 +137,11 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
                 ExamResult.objects.update_or_create(
                     enrollment=instance,
                     subject=subject,
-                    defaults={"score": score, "comments": comments}
+                    defaults={
+                        "score": score,
+                        "comments": comments,
+                        "sensei_examiner": sensei_name  # grava o nome do sensei
+                    }
                 )
 
         return super().update(instance, validated_data)
@@ -127,18 +155,41 @@ class ExamSerializer(serializers.ModelSerializer):
     participants = ExamEnrollmentSerializer(
         source="enrollments",
         many=True,
-        read_only=True  # 🔹 evita AssertionError
+        read_only=True
+    )
+
+    sensei_examiner = serializers.PrimaryKeyRelatedField(
+        queryset=Sensei.objects.all(),
+        required=False,
+        allow_null=True
     )
 
     class Meta:
         model = Exam
-        fields = ["id", "dojo", "dojo_name", "date", "description", "participants"]
+        fields = [
+            "id",
+            "dojo",
+            "dojo_name",
+            "date",
+            "description",
+            "sensei_examiner",
+            "participants",
+        ]
 
     def update(self, instance, validated_data):
-        """
-        Atualiza participantes e seus resultados via nested manual.
-        """
-        participants_data = self.context['request'].data.get("participants", None)  # ✅ pega do request.data
+        request = self.context['request']
+        user = getattr(request, "user", None)
+
+        # 🔹 Se o usuário for um Sensei, associe automaticamente como examinador
+        if user and not validated_data.get("sensei_examiner"):
+            try:
+                sensei = Sensei.objects.get(user=user)
+                validated_data["sensei_examiner"] = sensei
+            except Sensei.DoesNotExist:
+                pass  # Usuário não é um sensei
+
+        # 🔹 Atualiza participantes
+        participants_data = request.data.get("participants", None)
 
         if participants_data:
             for participant_data in participants_data:
@@ -149,9 +200,10 @@ class ExamSerializer(serializers.ModelSerializer):
                         enrollment,
                         data=participant_data,
                         partial=True,
-                        context={'request': self.context['request']}
+                        context={'request': request}
                     )
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
 
+        instance.save()
         return super().update(instance, validated_data)
