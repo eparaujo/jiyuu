@@ -9,7 +9,7 @@ urlpatterns = [
     path('exams/<int:pk>/update/', views.ExamUpdateView.as_view(), name='exam_update'),
     path('exams/<int:pk>/delete/', views.ExamDeleteView.as_view(), name='exam_delete'),
     
-       path('subjects/list/', views.ExamSubjectListView.as_view(), name='subject_list'),
+    path('subjects/list/', views.ExamSubjectListView.as_view(), name='subject_list'),
     path('subjects/create/', views.ExamSubjectCreateView.as_view(), name='subject_create'),
     path('subjects/<int:pk>/detail/', views.ExamSubjectDetailView.as_view(), name='subject_detail'),
     path('subjects/<int:pk>/update/', views.ExamSubjectUpdateView.as_view(), name='subject_update'),
@@ -37,5 +37,5 @@ urlpatterns = [
     path('api/v1/exams/<int:pk>/', views.ExamRetrieveUpdateDestroyAPIView.as_view(), name='exam-update-api'),
     path('api/v1/list/<int:pk>/', views.ExamCreateListAPIView.as_view(), name='exam-create-list-api'),
     path("api/v1/enrollments/<int:pk>/", views.ExamEnrollmentUpdateAPIView.as_view(), name="exam-enrollment-update"),
-
+    path('api/v1/listexams/', views.ExamCreateListAPIView.as_view(), name='exam-list-create-api'),
 ]

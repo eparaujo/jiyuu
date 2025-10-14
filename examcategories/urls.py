@@ -10,5 +10,5 @@ urlpatterns = [
 
  # urls para serem usadas via API no flutter
     path('api/v1/examcategories/<int:pk>/', views.ExamCategoryRetrieveUpdateDestroyAPIView.as_view(), name='exam-categories-retrieve-api'),
-    path('api/v1/list/<int:pk>/', views.ExamCategoryListAPIView.as_view(), name='exam-category-create-list-api'),
+    path('api/v1/listcategories/<int:pk>/', views.ExamCategoryListAPIView.as_view(), name='exam-category-create-list-api'),
 ]

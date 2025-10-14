@@ -45,7 +45,6 @@ class ExamCategoryDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('examcategory_list')
 
 # views exclusivas para serem usadas via api externa
-
 class ExamCategoryListAPIView(generics.ListCreateAPIView):
     queryset = models.ExamCategory.objects.all()
     serializer_class = serializers.ExamCategoriesSerializers

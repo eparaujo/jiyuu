@@ -302,6 +302,14 @@ class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = serializers.ExamSerializer 
 
 
+class ExamCreateListAPIView(generics.ListCreateAPIView):
+    """
+    GET: Lista todos os exames.
+    POST: Cria um novo exame.
+    """
+    queryset = models.Exam.objects.all()
+    serializer_class = serializers.ExamSerializer
+
  # API específica para salvar notas de um participante
 class ExamEnrollmentUpdateAPIView(generics.RetrieveUpdateAPIView):
     queryset = ExamEnrollment.objects.all()
