@@ -32,7 +32,7 @@ class ExamListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(description__icontains=description)
         return queryset
  
-
+ 
 class ExamCreateView(LoginRequiredMixin, CreateView):
     model = models.Exam
     template_name = "exam_create.html"

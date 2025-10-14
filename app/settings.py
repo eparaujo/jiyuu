@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'dashboards',
     'events',
     'alerts',
+    'examcategories',
 ]
 
 LOGIN_URL = 'login'

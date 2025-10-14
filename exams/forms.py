@@ -1,4 +1,3 @@
-# exams/forms.py
 from django import forms
 from . import models
 
@@ -9,21 +8,21 @@ from . import models
 class ExamForm(forms.ModelForm):
     class Meta:
         model = models.Exam
-        fields = ["dojo", "date", "description", "status"]
+        fields = ["dojo", "date", "description", "status", "categories"]
         widgets = {
             "dojo": forms.Select(attrs={"class": "form-control"}),
             "date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "status": forms.Select(attrs={"class": "form-control"}),
+            "categories": forms.SelectMultiple(attrs={"class": "form-control"}),
         }
         labels = {
             "dojo": "Dojo",
             "date": "Data do Exame",
             "description": "Descrição / Observações",
             "status": "Status do Exame",
+            "categories": "Categorias do Exame",
         }
- 
-
 # -------------------------------
 # EXAM SUBJECT
 # -------------------------------

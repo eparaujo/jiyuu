@@ -38,5 +38,6 @@ urlpatterns = [
     path('', include('exams.urls')),
     path('', include('events.urls')),
     path('', include('dashboards.urls')),
+    path('', include('examcategories.urls')),
 ]
 

@@ -10,6 +10,16 @@
   <tr><th>Status do Exame</th><td>{{ object.status }}</td></tr>
 </table>
 
+<h5 class="mt-4">Categorias do Exame</h5>
+<ul class="list-group mb-3">
+  {% for cat in object.categories.all %}
+    <li class="list-group-item">{{ cat.name_category }} — {{ cat.description }}</li>
+  {% empty %}
+    <li class="list-group-item">Sem categorias associadas.</li>
+  {% endfor %}
+</ul>
+
+
 <h5 class="mt-4">Requisitos</h5>
 <ul class="list-group mb-3">
   {% for req in object.requirements.all %} 

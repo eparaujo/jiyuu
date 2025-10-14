@@ -6,4 +6,3 @@ class GraduationAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 admin.site.register(models.Graduation, GraduationAdmin)
-

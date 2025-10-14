@@ -26,6 +26,7 @@
         <th>ID</th>
         <th>Dojo</th>
         <th>Data</th>
+        <th>Categoria</th>
         <th>Descrição</th>
         <th>Status do Exame</th>
         <th>Ações</th>
@@ -37,6 +38,13 @@
         <td>{{ exam.id }}</td>
         <td>{{ exam.dojo.tradename|default:exam.dojo }}</td>
         <td>{{ exam.date|date:"d/m/Y" }}</td>
+        <td>
+          {% for cat in exam.categories.all %}
+          <span class="badge bg-primary">{{ cat.name_category }}</span>
+          {% empty %}
+            - 
+          {% endfor %}
+        </td>
         <td>{{ exam.description|default:"—" }}</td>
         <td>{{ exam.status}}</td>
         <td>
