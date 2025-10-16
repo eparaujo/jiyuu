@@ -231,7 +231,18 @@ class ExamEnrollmentDeleteView(LoginRequiredMixin, DeleteView):
 # -------------------------------
 # EXAM RESULT
 # -------------------------------
+from collections import OrderedDict
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+from . import models
+
+
 class ExamResultListView(LoginRequiredMixin, ListView):
+    """
+    Lista os resultados de exame agrupados por karateca.
+    Observação: o campo `sensei_examiner` em ExamResult é um CharField (nome do avaliador),
+    portanto tratamos como string na exibição.
+    """
     model = models.ExamResult
     template_name = "result_list.html"
     context_object_name = "results"
@@ -239,35 +250,42 @@ class ExamResultListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         """
-        Retorna a lista de resultados de exame com filtros opcionais.
-        Inclui relacionamentos necessários para evitar consultas extras.
+        Retorna queryset otimizado (evita N+1) e aplica filtros opcionais.
         """
-        # 🔹 Identifica o sensei examinador vinculado ao usuário logado
-        user = self.request.user
-        email = user.email
-
-        # 🔹 Busca o Sensei associado ao usuário (se existir)
-        #from senseis.models import Sensei  # ajuste o import conforme o nome da sua app
-        sensei_examiner = Sensei.objects.filter(user=user).all()
-        
-        # 🔹 Otimiza consultas com joins relacionados
         queryset = (
             super()
             .get_queryset()
-            .select_related("enrollment__karateca", "subject")
+            .select_related(
+                "enrollment__karateca",  # FK real: traz dados do karateca
+                "subject"                # FK real: traz dados da matéria
+            )
+            .order_by("enrollment__karateca__name", "subject__name")
         )
 
-        # 🔹 Filtro opcional por nome da matéria
+        # filtro opcional por nome da matéria
         subject = self.request.GET.get("subject")
         if subject:
             queryset = queryset.filter(subject__name__icontains=subject)
 
-        # 🔹 Se quiser filtrar apenas resultados do sensei logado:
-        if sensei_examiner:
-            queryset = queryset.filter(sensei_examiner=sensei_examiner)
-
         return queryset
-     
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrupa os resultados por karateca e coloca em `karateca_list`
+        no formato que seu template espera: [{'grouper': karateca, 'list': [...]}, ...]
+        """
+        context = super().get_context_data(**kwargs)
+        results_page = context.get(self.context_object_name, [])
+
+        grouped = OrderedDict()
+        for result in results_page:
+            # enrollment.karateca é a instância do Karateca (objeto)
+            karateca = result.enrollment.karateca
+            grouped.setdefault(karateca, []).append(result)
+
+        # transforma em lista de dicionários para o template
+        context["karateca_list"] = [{"grouper": k, "list": v} for k, v in grouped.items()]
+        return context
     
 
 class ExamResultCreateView(LoginRequiredMixin, CreateView):

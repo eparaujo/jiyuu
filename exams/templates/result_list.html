@@ -32,7 +32,7 @@
                   - {{ result.subject.name }} | Nota: {{ result.score }} | 
                   Comentário: {{ result.comments|default:"Sem comentários" }} 
                   {% if result.sensei_examiner %}
-                    | Examinador: {{ result.sensei_examiner.name }}
+                    - Examinador: {{ result.sensei_examiner }}
                   {% endif %}
 
                 </li>

@@ -153,7 +153,7 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
                     defaults={
                         "score": score,
                         "comments": comments,
-                        "sensei_examiner": sensei_name  # grava o nome do sensei
+                        "sensei_examiner": sensei_examiner  # grava o nome do sensei
                     }
                 )
 
