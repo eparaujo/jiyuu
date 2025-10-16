@@ -13,7 +13,7 @@ class ExamCategoryListView(LoginRequiredMixin, ListView):
     model = models.ExamCategory
     template_name = 'examcategory_list.html'
     context_object_name ='examcategories'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
         queryset = super().get_queryset()

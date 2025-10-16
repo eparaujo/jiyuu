@@ -12,7 +12,8 @@ from rest_framework import generics
 from . import serializers
 from .serializers import ExamResultSerializer, ExamRequirementWithResultSerializer, ExamEnrollmentSerializer, ExamSerializer, ExamEnrollmentSerializer
 from rest_framework.views import APIView
-from .models import ExamEnrollment
+from .models import ExamEnrollment, Exam
+from examcategories.models import ExamCategory
 from senseis.models import Sensei
 
 
@@ -293,14 +294,12 @@ class ExamResultDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "result_delete.html"
     success_url = reverse_lazy("result_list")
 
-class ExamCreateListAPIView(generics.ListCreateAPIView):
-    queryset = models.Exam.objects.all()
-    serializer_class = serializers.ExamSerializer
 
 class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = models.Exam.objects.all()
-    serializer_class = serializers.ExamSerializer 
-
+    serializer_class = serializers.ExamSerializer
+    
+    
 
 class ExamCreateListAPIView(generics.ListCreateAPIView):
     """
@@ -310,6 +309,7 @@ class ExamCreateListAPIView(generics.ListCreateAPIView):
     queryset = models.Exam.objects.all()
     serializer_class = serializers.ExamSerializer
 
+    
  # API específica para salvar notas de um participante
 class ExamEnrollmentUpdateAPIView(generics.RetrieveUpdateAPIView):
     queryset = ExamEnrollment.objects.all()
@@ -318,4 +318,42 @@ class ExamEnrollmentUpdateAPIView(generics.RetrieveUpdateAPIView):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context["request"] = self.request
+        return context 
+    
+
+class ExamCategoryListAPIView(generics.ListAPIView):
+    """
+    Retorna as categorias associadas a um exame específico.
+    """
+    serializer_class = serializers.ExamCategorySerializer
+
+    def get_queryset(self):
+        exam_id = self.kwargs["pk"]
+        exam = Exam.objects.filter(id=exam_id).first()
+        if exam:
+            return exam.categories.all() #usa o ManyToMany do model exam 
+        return models.ExamCategory.objects.filter(exam__id=exam_id)
+    
+
+class ExamParticipantsByCategoryAPIView(generics.RetrieveAPIView):
+    """
+    Retorna os detalhes do exame + lista de participantes filtrados por categoria.
+    """
+    serializer_class = serializers.ExamSerializer  # ✅ usa o serializer completo
+
+    def get_object(self):
+        exam_id = self.kwargs.get("pk")
+        category = self.kwargs.get("category")
+        exam = get_object_or_404(models.Exam, id=exam_id)
+        # ✅ filtra apenas os participantes da categoria informada
+        exam.filtered_participants = models.ExamEnrollment.objects.filter(
+            exam_id=exam_id,
+            karateca__graduation__belt=category
+        ).select_related("karateca", "exam")
+        return exam
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["filtered_participants"] = getattr(self.get_object(), "filtered_participants", [])
         return context
+

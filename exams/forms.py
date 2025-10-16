@@ -1,6 +1,7 @@
 from django import forms
 from . import models
-
+from .models import ExamEnrollment
+from examcategories.models import ExamCategory
 
 # -------------------------------
 # EXAM
@@ -65,16 +66,18 @@ class ExamRequirementForm(forms.ModelForm):
 class ExamEnrollmentForm(forms.ModelForm):
     class Meta:
         model = models.ExamEnrollment
-        fields = ["exam", "karateca", "current_graduation"]
+        fields = ["exam", "karateca", "current_graduation", "category"]
         widgets = {
             "exam": forms.Select(attrs={"class": "form-control"}),
             "karateca": forms.Select(attrs={"class": "form-control"}),
             "current_graduation": forms.Select(attrs={"class": "form-control"}),
+            "category": forms.Select(attrs={"class": "form-control"}),
         }
         labels = {
             "exam": "Exame",
             "karateca": "Karateca",
             "current_graduation": "Graduação Atual",
+            "category": "Categoria de Graduação",
         }
 
 

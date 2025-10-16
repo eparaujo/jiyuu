@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Exam, ExamEnrollment, ExamResult, ExamRequirement
+from .models import Exam, ExamEnrollment, ExamResult, ExamRequirement, ExamCategory
 from senseis.models import Sensei
+from examcategories.serializers import ExamCategoriesSerializers
 
 # -----------------------------------------------------------------------------  
 # Serializer para resultados individuais (input/output das notas e comentários)  
@@ -64,6 +65,16 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         source="karateca.graduation.belt",
         read_only=True
     )  # graduação atual do karateca
+    
+    # 🔹 Categoria do exame (FK -> ExamCategory)
+    category_id = serializers.PrimaryKeyRelatedField(
+        source="category",
+        queryset=ExamCategory.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    
     subjects = serializers.SerializerMethodField()  # matérias + notas (somente leitura)
     approved = serializers.SerializerMethodField()  # calculado dinamicamente
     results = ExamResultSerializer(many=True, required=False)  # 🔹 para leitura/escrita de notas
@@ -75,6 +86,8 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
             "karateca",
             "karateca_name",
             "karateca_graduation",
+            "category_id",
+            "category_name",
             "approved",
             "subjects",   # leitura
             "results",    # escrita
@@ -152,11 +165,8 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
 # -----------------------------------------------------------------------------  
 class ExamSerializer(serializers.ModelSerializer):
     dojo_name = serializers.CharField(source="dojo.tradename", read_only=True)
-    participants = ExamEnrollmentSerializer(
-        source="enrollments",
-        many=True,
-        read_only=True
-    )
+    categories = ExamCategoriesSerializers(many=True, read_only=True)
+    participants = serializers.SerializerMethodField()
 
     sensei_examiner = serializers.PrimaryKeyRelatedField(
         queryset=Sensei.objects.all(),
@@ -172,10 +182,26 @@ class ExamSerializer(serializers.ModelSerializer):
             "dojo_name",
             "date",
             "description",
+            "status",
             "sensei_examiner",
+            "categories",
             "participants",
         ]
 
+       # -------------------------------------------------------------------------
+    # ✅ Permite retornar lista filtrada de participantes (por categoria)
+    # -------------------------------------------------------------------------
+    def get_participants(self, obj):
+        filtered = self.context.get("filtered_participants")
+        if filtered is not None:
+            return ExamEnrollmentSerializer(filtered, many=True).data
+        # caso contrário, retorna todos
+        return ExamEnrollmentSerializer(obj.enrollments.all(), many=True).data
+    
+
+# -------------------------------------------------------------------------
+    # ✅ Atualização de exame + participantes
+    # -------------------------------------------------------------------------
     def update(self, instance, validated_data):
         request = self.context['request']
         user = getattr(request, "user", None)
@@ -207,3 +233,10 @@ class ExamSerializer(serializers.ModelSerializer):
 
         instance.save()
         return super().update(instance, validated_data)
+
+
+class ExamCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExamCategory
+        fields = ['id', 'name', 'description']
+ 

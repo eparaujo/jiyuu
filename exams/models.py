@@ -87,29 +87,11 @@ class ExamRequirement(models.Model):
 class ExamEnrollment(models.Model):
     """Inscrição de um karateca em um exame"""
 
-    exam = models.ForeignKey(
-        Exam,
-        on_delete=models.CASCADE,
-        related_name="enrollments"
-    )
-    karateca = models.ForeignKey(
-        Karateca,
-        on_delete=models.CASCADE,
-        related_name="exam_enrollments"
-    )
-    current_graduation = models.ForeignKey(
-        Graduation,
-        on_delete=models.SET_NULL,
-        null=True
-    )
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="enrollments")
+    karateca = models.ForeignKey(Karateca, on_delete=models.CASCADE, related_name="exam_enrollments")
+    current_graduation = models.ForeignKey(Graduation, on_delete=models.SET_NULL, null=True)
     # 🔹 Categoria do exame na qual o karateca está inscrito
-    category = models.ForeignKey(
-        ExamCategory,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="enrollments"
-    )
+    category = models.ForeignKey(ExamCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="enrollments")
     approved = models.BooleanField(default=False)
 
     def __str__(self):

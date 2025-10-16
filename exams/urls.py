@@ -33,9 +33,16 @@ urlpatterns = [
     path('results/<int:pk>/update/', views.ExamResultUpdateView.as_view(), name='result_update'),
     path('results/<int:pk>/delete/', views.ExamResultDeleteView.as_view(), name='result_delete'),
 
-     # urls para serem usadas via API no flutter
+    # urls para serem usadas via API no flutter
     path('api/v1/exams/<int:pk>/', views.ExamRetrieveUpdateDestroyAPIView.as_view(), name='exam-update-api'),
     path('api/v1/list/<int:pk>/', views.ExamCreateListAPIView.as_view(), name='exam-create-list-api'),
     path("api/v1/enrollments/<int:pk>/", views.ExamEnrollmentUpdateAPIView.as_view(), name="exam-enrollment-update"),
     path('api/v1/listexams/', views.ExamCreateListAPIView.as_view(), name='exam-list-create-api'),
+
+    # endpoints para listar categorias do exame via api chamada pelo flutter
+    # urls.py
+    path('api/v1/exams/<int:pk>/categories/', views.ExamCategoryListAPIView.as_view(), name='exam-category-list-api'),
+
+    # lista karatecas por categoria
+    path("api/v1/exams/<int:pk>/categories/<str:category>/", views.ExamParticipantsByCategoryAPIView.as_view(), name="exam-participants-by-category-api"),
 ]

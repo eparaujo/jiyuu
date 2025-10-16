@@ -23,6 +23,7 @@
         <th>Exame</th>
         <th>Karateca</th>
         <th>Graduação Atual</th>
+        <th>Categoria de Graduação</th>
         <th>Ações</th>
       </tr>
     </thead>
@@ -33,6 +34,7 @@
         <td>{{ enrollment.exam.date|date:"d/m/Y" }} - {{ enrollment.exam.dojo.tradename|default:enrollment.exam.dojo }}</td>
         <td>{{ enrollment.karateca }}</td>
         <td>{{ enrollment.current_graduation.name|default:"—" }}</td>
+        <td>{{ enrollment.category }}</td>
         <td>
           <a href="{% url 'enrollment_detail' enrollment.id %}" class="btn btn-info btn-sm"><i class="bi bi-eye"></i></a>
           <a href="{% url 'enrollment_update' enrollment.id %}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i></a>
