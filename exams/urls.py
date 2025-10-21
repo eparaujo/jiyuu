@@ -33,6 +33,8 @@ urlpatterns = [
     path('results/<int:pk>/update/', views.ExamResultUpdateView.as_view(), name='result_update'),
     path('results/<int:pk>/delete/', views.ExamResultDeleteView.as_view(), name='result_delete'),
 
+    # exams/urls.py
+    path("exams/<int:pk>/participants/<str:category>/", views.ExamParticipantsByCategoryView.as_view(), name="exam-participants-by-category-view",),
     # urls para serem usadas via API no flutter
     path('api/v1/exams/<int:pk>/', views.ExamRetrieveUpdateDestroyAPIView.as_view(), name='exam-update-api'),
     path('api/v1/list/<int:pk>/', views.ExamCreateListAPIView.as_view(), name='exam-create-list-api'),
@@ -44,5 +46,9 @@ urlpatterns = [
     path('api/v1/exams/<int:pk>/categories/', views.ExamCategoryListAPIView.as_view(), name='exam-category-list-api'),
 
     # lista karatecas por categoria
-    path("api/v1/exams/<int:pk>/categories/<str:category>/", views.ExamParticipantsByCategoryAPIView.as_view(), name="exam-participants-by-category-api"),
+    # ✅ Corrigido para casar com o Flutter
+    path("api/v1/exams/<int:pk>/categories/<str:category>/participants/", 
+        views.ExamParticipantsByCategoryAPIView.as_view(), 
+        name="exam-participants-by-category-api"),
+
 ]

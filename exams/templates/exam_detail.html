@@ -19,7 +19,6 @@
   {% endfor %}
 </ul>
 
-
 <h5 class="mt-4">Requisitos</h5>
 <ul class="list-group mb-3">
   {% for req in object.requirements.all %} 
@@ -30,21 +29,39 @@
     <li class="list-group-item">Sem requisitos cadastrados.</li>
   {% endfor %}
 </ul>
- 
-<h5 class="mt-4">Inscrições</h5>
-<ul class="list-group mb-3">
-  {% for enr in object.enrollments.all %}
-    <li class="list-group-item">
-      <strong>{{ enr.karateca }}</strong> — {{ enr.current_graduation.name|default:"Sem graduação" }}
-    </li>
-  {% empty %}
-    <li class="list-group-item">Sem inscrições.</li>
-  {% endfor %}
-</ul>
+
+<!-- 🔽 SEÇÃO AJUSTADA: Inscrições agrupadas por categoria -->
+<h5 class="mt-4">Inscrições por Categoria</h5>
+{% for cat in object.categories.all %}
+  <div class="card mb-3">
+    <div class="card-header fw-bold">
+      {{ cat.name_category }}
+    </div>
+    <ul class="list-group list-group-flush">
+      {% for enr in object.enrollments.all %}
+        {% if enr.category == cat %}
+          <li class="list-group-item">
+            <strong>{{ enr.karateca }}</strong> — {{ enr.current_graduation.name|default:"Sem graduação" }}
+          </li>
+        {% endif %}
+      {% empty %}
+        <li class="list-group-item">Sem inscrições.</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% empty %}
+  <p>Nenhuma categoria cadastrada.</p>
+{% endfor %}
 
 <div class="d-flex gap-2">
   <a href="{% url 'exam_list' %}" class="btn btn-secondary">Voltar</a>
   <a href="{% url 'exam_update' object.id %}" class="btn btn-warning">Editar</a>
   <a href="{% url 'exam_delete' object.id %}" class="btn btn-danger">Excluir</a>
 </div>
+
+<!-- Flutter integration link -->
+<p class="mt-3 text-muted small">
+  Endpoint para Flutter: <code>{{ request.scheme }}://{{ request.get_host }}/api/v1/exams/{{ object.id }}/</code>
+</p>
+
 {% endblock %}

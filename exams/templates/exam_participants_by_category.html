@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Participantes do exame {{ exam.description }} — Categoria {{ category }}</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nome do Karateca</th>
+      <th>Graduação Atual</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in participants %}
+      <tr>
+        <td>{{ p.karateca.name }}</td>
+        <td>{{ p.karateca.graduation.belt }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="2">Nenhum inscrito nesta categoria.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

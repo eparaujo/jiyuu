@@ -2,7 +2,7 @@
 from typing import Any
 from django.db.models.query import QuerySet
 from django.shortcuts import render
-from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
+from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView, View
 from django.urls import reverse_lazy
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from .models import ExamEnrollment, Exam
 from examcategories.models import ExamCategory
 from senseis.models import Sensei
+from django.shortcuts import get_object_or_404
 
 
 # -------------------------------
@@ -227,6 +228,28 @@ class ExamEnrollmentDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "enrollment_delete.html"
     success_url = reverse_lazy("enrollment_list")
 
+# -------------------------------
+# VISUALIZAR KARATECAS INSCRITOS POR CATEGORIA DE GRADUAÇÃO
+# -------------------------------
+
+class ExamParticipantsByCategoryView(LoginRequiredMixin, View):
+    template_name = "exam_participants_by_category.html"
+
+    def get(self, request, pk, category):
+        exam = get_object_or_404(models.Exam, id=pk)
+        participants = models.ExamEnrollment.objects.filter(
+            exam=exam,
+            category__name__iexact=category  # compara ignorando maiúsculas/minúsculas
+        ).select_related("karateca", "karateca__graduation", "category")
+
+        context = {
+            "exam": exam,
+            "category": category.capitalize(),
+            "participants": participants,
+        }
+        return render(request, self.template_name, context)
+
+
 
 # -------------------------------
 # EXAM RESULT
@@ -353,25 +376,26 @@ class ExamCategoryListAPIView(generics.ListAPIView):
         return models.ExamCategory.objects.filter(exam__id=exam_id)
     
 
-class ExamParticipantsByCategoryAPIView(generics.RetrieveAPIView):
+class ExamParticipantsByCategoryAPIView(generics.ListAPIView):
     """
-    Retorna os detalhes do exame + lista de participantes filtrados por categoria.
+    Retorna os participantes de um exame filtrados por categoria (graduation do karateca).
+    Endpoint: /api/v1/exams/<exam_id>/categories/<category_name>/participants/
     """
-    serializer_class = serializers.ExamSerializer  # ✅ usa o serializer completo
+    serializer_class = ExamEnrollmentSerializer
 
-    def get_object(self):
+    def get_queryset(self):
         exam_id = self.kwargs.get("pk")
-        category = self.kwargs.get("category")
-        exam = get_object_or_404(models.Exam, id=exam_id)
-        # ✅ filtra apenas os participantes da categoria informada
-        exam.filtered_participants = models.ExamEnrollment.objects.filter(
-            exam_id=exam_id,
-            karateca__graduation__belt=category
-        ).select_related("karateca", "exam")
-        return exam
+        category_name = self.kwargs.get("category")  # string enviada pelo frontend
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context["filtered_participants"] = getattr(self.get_object(), "filtered_participants", [])
-        return context
+        # Garante que o exame existe
+        exam = get_object_or_404(Exam, id=exam_id)
+
+        # Filtra inscrições pela graduação (nome da categoria)
+        queryset = ExamEnrollment.objects.filter(
+            exam=exam,
+            karateca__graduation__name__iexact=category_name  # <-- acessa o campo da FK
+        ).select_related("karateca", "karateca__graduation", "category")
+
+
+        return queryset
 
