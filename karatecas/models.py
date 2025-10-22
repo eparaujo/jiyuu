@@ -1,11 +1,18 @@
 from django.db import models
+from django.contrib.auth.models import User  # 🔹 Import necessário para o relacionamento com usuário
 from graduations.models import Graduation
 from dojos.models import Dojo
 from genres.models import Genre
 from revenues.models import Revenue
+from kindrevenues.models import KindRevenue
+
 
 class Karateca(models.Model):
- 
+    """
+    Modelo que representa um Karateca (aluno), com vínculo a um usuário Django.
+    O usuário é criado automaticamente no momento do cadastro via API.
+    """
+
     STATUS = [
         ('ATIVO', 'Ativo'),
         ('AFASTADO', 'Afastado'),
@@ -13,20 +20,53 @@ class Karateca(models.Model):
         ('CANCELADO', 'Desmatriculado'),
     ]
 
+    # 🔹 Relacionamento com o usuário Django
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name='karateka')
+
+    # 🔹 Dados principais
     name = models.CharField(max_length=200)
-    genre = models.ForeignKey(Genre, on_delete=models.PROTECT, related_name='genres')
+    genre = models.ForeignKey(Genre, on_delete=models.PROTECT,        related_name='karatekas')
     cpf = models.CharField(max_length=30, blank=True, null=True)
     email = models.EmailField(unique=True)
     celphone = models.CharField(max_length=60, blank=True, null=True)
-    graduation = models.ForeignKey(Graduation, on_delete=models.PROTECT, related_name='graduation', blank=True, null=True)
-    dojo = models.ForeignKey(Dojo, on_delete=models.PROTECT,related_name='dojo')
-    monthlypay =  models.ForeignKey(Revenue, on_delete=models.PROTECT, related_name='mensalidade')
-    active = models.CharField(max_length=60, choices=STATUS, blank=True, null=True) #alunos com status igual a ATIVO
+
+    # 🔹 Graduação e faixa
+    graduation = models.ForeignKey(Graduation, on_delete=models.PROTECT, related_name='karatekas', blank=True, null=True)
+    dan = models.CharField(max_length=60, blank=True, null=True)  # 🔹 Grau (1º Dan, 2º Dan, etc.)
+
+    # 🔹 Outras informações fixas
+    dojo = models.ForeignKey(Dojo, on_delete=models.PROTECT, related_name='karatekas')
+    #monthlypay = models.ForeignKey(Revenue, on_delete=models.PROTECT, related_name='karatekas_mensalidade')
+    monthlypay = models.ForeignKey(KindRevenue, on_delete=models.PROTECT, related_name='mensalidade')
+    active = models.CharField(
+        max_length=60,
+        choices=STATUS,
+        default='ATIVO'  # 🔹 Valor padrão
+    )
+
+    # 🔹 Campo adicional de controle
     total_karatecas = models.IntegerField(blank=True, null=True)
 
     class Meta:
         ordering = ['name']
-
+        verbose_name = "Karateca"
+        verbose_name_plural = "Karatecas"
 
     def __str__(self):
         return self.name
+
+    # 🔹 Método utilitário para criação de usuário vinculado
+    def create_user_account(self, password):
+        """
+        Cria e vincula automaticamente um usuário Django
+        para o Karateca recém-cadastrado.
+        """
+        if not self.user:
+            username = self.email  # usamos o e-mail como username
+            user = User.objects.create_user(
+                username=username,
+                email=self.email,
+                password=password
+            )
+            self.user = user
+            self.save()

@@ -5,6 +5,8 @@ from . import models, forms
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from rest_framework import generics, permissions
+from . import serializers
 
 
 class DojoListView(LoginRequiredMixin, ListView):
@@ -41,3 +43,9 @@ class DojoDeleteView(LoginRequiredMixin, DeleteView):
     model = models.Dojo
     template_name = 'dojo_delete.html'
     success_url = reverse_lazy('dojo_list')
+ 
+# 🔹 Lista todos os Dojos
+class DojoListAPI(generics.ListAPIView):
+    queryset = models.Dojo.objects.all()
+    serializer_class = serializers.DojoSerializer
+    ermission_classes = [permissions.AllowAny]  # ✅ Permite acesso público 

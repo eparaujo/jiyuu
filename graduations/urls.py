@@ -7,4 +7,5 @@ urlpatterns = [
     path('graduations/<int:pk>/detail/', views.GraduationDetailView.as_view(), name='graduation_detail'),
     path('graduations/<int:pk>/update/', views.GraduationUpdateView.as_view(), name='graduation_update'),
     path('graduations/<int:pk>/delete/', views.GraduationDeleteView.as_view(), name='graduation_delete'),
+    path('api/v1/graduations/', views.GraduationListAPI.as_view(), name='api_graduations'),
 ]

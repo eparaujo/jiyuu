@@ -26,6 +26,6 @@ class KaratecaForm(forms.ModelForm):
             'celPhone': 'Número do Telefone Celuar-Whatsapp',
             'graduation': 'Graduação',
             'dojo': 'Dojo',
-            'monthlypay': 'Valor da Mensalidade',
+            'monthlypay': 'Modalidade de Pagamento',
             'active': 'Status',
         }

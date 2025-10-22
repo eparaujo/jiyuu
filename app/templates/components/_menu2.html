@@ -10,17 +10,25 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'inflow_list' %}">
-              <i class="bi bi-currency-exchange"></i> Entradas - Receitas
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'outflow_list' %}">
-              <i class="bi bi-cart-check"></i> Saídas - Despesas
-            </a>
-          </li>
           
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-currency-exchange"></i> Financeiro
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" href="{% url 'inflow_list' %}">
+                  <i class="bi bi-currency-exchange"></i> Receitas - Entradas
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'outflow_list' %}">
+                  <i class="bi bi-cart-check"></i> Receitas - Entradas
+                </a>
+              </li>
+            </ul>
+          </li>
+
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi bi-bookmarks"></i> Cadastros

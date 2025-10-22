@@ -5,6 +5,8 @@ from . import models, forms
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from rest_framework import generics, permissions
+from . import serializers
 
 
 class KaratecaListView(LoginRequiredMixin, ListView):
@@ -38,6 +40,19 @@ class KaratecaUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('karateca_list')
 
 class KaratecaDeleteView(LoginRequiredMixin, DeleteView):
-    model = models.Karateca
+    model = models.Karateca 
     template_name = 'karateca_delete.html'
     success_url = reverse_lazy('karateca_list')
+
+class KaratecaCreateListAPIView(generics.ListCreateAPIView):
+    queryset = models.Karateca.objects.all()
+    serializer_class = serializers.KaratecaSerializer
+
+class KaratecaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = models.Karateca.objects.all()
+    serializer_class = serializers.KaratecaSerializer
+    
+class PublicKaratekaRegisterView(generics.CreateAPIView):
+    queryset = models.Karateca.objects.all()
+    serializer_class = serializers.PublicKaratekaRegisterSerializer
+    permission_classes = [permissions.AllowAny]

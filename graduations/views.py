@@ -5,6 +5,8 @@ from . import models, forms
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from . import serializers
+from rest_framework import generics, permissions
 
 
 class GraduationListView(LoginRequiredMixin, ListView):
@@ -41,3 +43,9 @@ class GraduationDeleteView(LoginRequiredMixin, DeleteView):
     model = models.Graduation
     template_name = 'graduation_delete.html'
     success_url = reverse_lazy('graduation_list')
+
+ # 🔹 Lista todas as graduações
+class GraduationListAPI(generics.ListAPIView):
+    queryset = models.Graduation.objects.all()
+    serializer_class = serializers.GraduationSerializer   
+    ermission_classes = [permissions.AllowAny]  # ✅ Permite acesso público
