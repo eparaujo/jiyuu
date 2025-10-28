@@ -36,16 +36,14 @@ class Karateca(models.Model):
 
     # 🔹 Outras informações fixas
     dojo = models.ForeignKey(Dojo, on_delete=models.PROTECT, related_name='karatekas')
-    #monthlypay = models.ForeignKey(Revenue, on_delete=models.PROTECT, related_name='karatekas_mensalidade')
-    monthlypay = models.ForeignKey(KindRevenue, on_delete=models.PROTECT, related_name='mensalidade')
-    active = models.CharField(
-        max_length=60,
-        choices=STATUS,
-        default='ATIVO'  # 🔹 Valor padrão
-    )
-
+    #monthlypay = models.ForeignKey(KindRevenue, on_delete=models.PROTECT, related_name='mensalidade')
+    active = models.CharField(max_length=60, choices=STATUS, default='ATIVO')# 🔹 Valor padrão
+    monthly_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0) # valor da mensalidade
+    due_day = models.PositiveSmallIntegerField(default=5)  # dia de vencimento da mensalidade (1-31)
+  
+    
     # 🔹 Campo adicional de controle
-    total_karatecas = models.IntegerField(blank=True, null=True)
+    #total_karatecas = models.IntegerField(blank=True, null=True)
 
     class Meta:
         ordering = ['name']

@@ -7,7 +7,7 @@ from karatecas.models import Karateca
 class KaratecaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Karateca
-        fields = '__all__'
+        fields = '__all__' 
 
 
 class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
@@ -22,13 +22,11 @@ class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'cpf', 'email', 'celphone',
             'genre', 'graduation', 'dan',
-            'active', 'dojo', 'monthlypay',
-            'password'
+            'active', 'dojo', 'password'
         ]
         extra_kwargs = {
             'active': {'read_only': True},
             'dojo': {'required': True},
-            'monthlypay': {'required': True},
             'genre': {'required': True},
         }
 

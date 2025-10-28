@@ -6,7 +6,7 @@ class KaratecaForm(forms.ModelForm):
 
     class Meta:
         model = models.Karateca
-        fields = ['name', 'genre', 'cpf', 'email', 'celphone', 'graduation', 'dojo', 'monthlypay', 'active']
+        fields = ['name', 'genre', 'cpf', 'email', 'celphone', 'graduation', 'dan', 'dojo', 'active', 'monthly_fee', 'due_day']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'genre': forms.Select(attrs={'class': 'form-control'}),
@@ -14,9 +14,11 @@ class KaratecaForm(forms.ModelForm):
             'email': forms.TextInput(attrs={'class': 'form-control'}),
             'celphone':forms.TextInput(attrs={'class': 'form-control'}),
             'graduation': forms.Select(attrs={'class': 'form-control'}),
+            'dan': forms.Select(attrs={'class': 'form-control'}),
             'dojo': forms.Select(attrs={'class': 'form-control'}),
-            'monthlypay': forms.Select(attrs={'class': 'form-control'}),
             'active': forms.Select(attrs={'class': 'form-control'}),
+            'monthly_fee': forms.TextInput(attrs={'placeholder': 'DD','class': 'form-control' }),
+            'due_day': forms.NumberInput(attrs={'step': '0.01', 'placeholder': '0.00'}),
         }
         labels = {
             'name': 'Nome',
@@ -25,7 +27,9 @@ class KaratecaForm(forms.ModelForm):
             'email': 'Endereço de E-mail',
             'celPhone': 'Número do Telefone Celuar-Whatsapp',
             'graduation': 'Graduação',
+            'dan': 'Definido quando se tratar de Faixa Preta',
             'dojo': 'Dojo',
-            'monthlypay': 'Modalidade de Pagamento',
             'active': 'Status',
+            'monthly_fee': 'Valor da Mensalidade',
+            'due_day': 'Data de Vencimento',
         }

@@ -68,6 +68,11 @@ INSTALLED_APPS = [
     'events',
     'alerts',
     'examcategories',
+    'billingCycle',
+    'invoices',
+    'invoiceItem',
+    'courseEnrollment',
+    'django_crontab',
 ]
 
 LOGIN_URL = 'login'
@@ -85,6 +90,10 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'app.urls'
+
+CRONJOBS = [
+    ('0 0 1 * *', 'django.core.management.call_command', ['generate_billing']),
+]
 
 TEMPLATES = [
     {

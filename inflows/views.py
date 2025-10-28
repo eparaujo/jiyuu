@@ -5,6 +5,8 @@ from . import models, forms
 from django.views.generic import ListView, CreateView, DetailView 
 from django.urls import reverse_lazy
 from revenues.models import Revenue
+from outflows.models import Outflow
+from kindrevenues.models import KindRevenue
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
@@ -22,6 +24,7 @@ class InflowListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(revenue_name__icontains=revenue) #estou filtrando pelo nome da revenue
         return queryset
     
+
 class InflowCreateView(LoginRequiredMixin, CreateView):
     model = models.Inflow
     template_name = 'inflow_create.html'
@@ -31,4 +34,4 @@ class InflowCreateView(LoginRequiredMixin, CreateView):
 
 class InflowDetailView(LoginRequiredMixin, DetailView):
     model = models.Inflow
-    template_name = 'inflow_detail.html'
+    template_name = 'inflow_detail.html' 

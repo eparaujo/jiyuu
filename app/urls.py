@@ -39,5 +39,6 @@ urlpatterns = [
     path('', include('events.urls')),
     path('', include('dashboards.urls')),
     path('', include('examcategories.urls')),
+    path('', include('invoices.urls')),
 ]
 

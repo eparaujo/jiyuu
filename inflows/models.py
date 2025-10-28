@@ -1,6 +1,6 @@
 from django.db import models
 from revenues.models import Revenue
-
+from karatecas.models import Karateca
 
 
 class Inflow(models.Model):
