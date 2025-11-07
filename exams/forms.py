@@ -16,7 +16,7 @@ class ExamForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "status": forms.Select(attrs={"class": "form-control"}),
             "categories": forms.SelectMultiple(attrs={"class": "form-control"}),
-        }
+        } 
         labels = {
             "dojo": "Dojo",
             "date": "Data do Exame",
@@ -45,9 +45,10 @@ class ExamSubjectForm(forms.ModelForm):
 class ExamRequirementForm(forms.ModelForm):
     class Meta:
         model = models.ExamRequirement
-        fields = ["exam", "subject", "max_score", "min_score"]
+        fields = ["exam", "category","subject", "max_score", "min_score"]
         widgets = {
             "exam": forms.Select(attrs={"class": "form-control"}),
+            "category": forms.Select(attrs={"class": "form-control"}),
             "subject": forms.Select(attrs={"class": "form-control"}),
             "max_score": forms.NumberInput(attrs={"class": "form-control"}),
             "min_score": forms.NumberInput(attrs={"class": "form-control"}),

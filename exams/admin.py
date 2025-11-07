@@ -31,7 +31,7 @@ class ExamSubjectAdmin(admin.ModelAdmin):
 # ============================
 @admin.register(ExamRequirement)
 class ExamRequirementAdmin(admin.ModelAdmin):
-    list_display = ("exam", "subject", "max_score", "min_score")
+    list_display = ("exam", "category", "subject", "max_score", "min_score")
     list_filter = ("exam", "subject")
 
 

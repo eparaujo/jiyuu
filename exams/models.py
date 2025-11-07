@@ -40,7 +40,7 @@ class Exam(models.Model):
         help_text="Categorias de graduação que fazem parte do exame (ex: Branca -> Azul)"
     )
 
-    # 🔹 Participantes (via tabela intermediária)
+    # 🔹 Participantes (via tabela intermediária) 
     participants = models.ManyToManyField(
         Karateca,
         through="ExamEnrollment",
@@ -72,6 +72,13 @@ class ExamRequirement(models.Model):
         Exam,
         on_delete=models.CASCADE,
         related_name="requirements"
+    )
+    category = models.ForeignKey(
+        ExamCategory,
+        on_delete=models.CASCADE,
+        related_name="requirements",
+        blank=True,
+        null=True
     )
     subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE)
     max_score = models.PositiveIntegerField(default=0)

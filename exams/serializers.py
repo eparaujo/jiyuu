@@ -4,7 +4,7 @@ from senseis.models import Sensei
 #from . import serializers
 
 
-
+ 
 # -----------------------------------------------------------------------------  
 # Serializer para resultados individuais (input/output das notas e comentários)  
 # -----------------------------------------------------------------------------  
@@ -187,16 +187,16 @@ class ExamSerializer(serializers.ModelSerializer):
             "selected_category",  # ✅ novo campo retornado no JSON
         ]
 
-    # --- Adicione este método abaixo das funções get_* ---
+    # --- método abaixo das funções get_* ---
     def to_representation(self, instance):
         """
         Intercepta a saída final antes de enviar o JSON.
         Ideal para debug e análise de dados enviados ao Flutter.
         """
         data = super().to_representation(instance)
-        print("\n🔍 JSON retornado para o Flutter:")
+        #print("\n🔍 JSON retornado para o Flutter:")
         import json
-        print(json.dumps(data, indent=4, ensure_ascii=False))
+        #print(json.dumps(data, indent=4, ensure_ascii=False))
         return data
         
     # -------------------------------------------------------------------------

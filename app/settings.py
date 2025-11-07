@@ -71,7 +71,6 @@ INSTALLED_APPS = [
     'billingCycle',
     'invoices',
     'invoiceItem',
-    'courseEnrollment',
     'django_crontab',
 ]
 

@@ -378,24 +378,27 @@ class ExamCategoryListAPIView(generics.ListAPIView):
 
 class ExamParticipantsByCategoryAPIView(generics.ListAPIView):
     """
-    Retorna os participantes de um exame filtrados por categoria (graduation do karateca).
+    Retorna os participantes de um exame filtrados por categoria (ExamCategory).
     Endpoint: /api/v1/exams/<exam_id>/categories/<category_name>/participants/
     """
     serializer_class = ExamEnrollmentSerializer
 
     def get_queryset(self):
         exam_id = self.kwargs.get("pk")
-        category_name = self.kwargs.get("category")  # string enviada pelo frontend
+        category_name = self.kwargs.get("category")  # string enviada pelo Flutter
+        print("📩 Categoria recebida do Flutter:", category_name)
 
         # Garante que o exame existe
         exam = get_object_or_404(Exam, id=exam_id)
 
-        # Filtra inscrições pela graduação (nome da categoria)
+        # 🔹 Filtra inscrições pela categoria (ExamCategory.name_category)
         queryset = ExamEnrollment.objects.filter(
             exam=exam,
-            karateca__graduation__name__iexact=category_name  # <-- acessa o campo da FK
-        ).select_related("karateca", "karateca__graduation", "category")
+            category__name_category__iexact=category_name
+        ).select_related("karateca", "karateca__graduation", "category") \
+         .order_by("karateca__name")  # opcional: ordena alfabeticamente
 
-
+        print(f"🔎 Total encontrados para {category_name}: {queryset.count()}")
+        print("Nome dos karatecas encontrados; ", queryset)
         return queryset
 

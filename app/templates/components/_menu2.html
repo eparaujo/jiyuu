@@ -16,24 +16,16 @@
               <i class="bi bi-currency-exchange"></i> Financeiro
             </a>
             <ul class="dropdown-menu">
-              <li>
-                <a class="dropdown-item" href="{% url 'inflow_list' %}">
-                  <i class="bi bi-currency-exchange"></i> Entradas
-                </a>
-              </li>
+              
               <li>
                 <a class="dropdown-item" href="{% url 'outflow_list' %}">
                   <i class="bi bi-cart-check"></i> Saídas
                 </a>
               </li>
-              <li>
-                <a class="dropdown-item" href="{% url 'revenue_list' %}">
-                  <i class="bi bi-cart-check"></i> Revenues -TESTE
-                </a>
-              </li>
+              
               <li>
                 <a class="dropdown-item" href="{% url 'invoice_list' %}">
-                  <i class="bi bi-cart-check"></i> Faturamento -TESTE
+                  <i class="bi bi-cart-check"></i> Faturamento
                 </a>
               </li>
             </ul>
@@ -88,6 +80,11 @@
               <li>
                 <a class="dropdown-item" href="{% url 'event_list' %}">
                   <i class="bi bi-award-fill"></i> Eventos
+                </a>  
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'event_enrollment' %}">
+                  <i class="bi bi-pen"></i> Inscrições em Eventos
                 </a>  
               </li>
             </ul>

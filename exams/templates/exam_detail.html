@@ -2,7 +2,7 @@
 {% block title %}SGK - Detalhe do Exame{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Exame #{{ object.id }}</h4>
+<h4 class="mb-3">Exame - {{ object.date }}</h4>
 <table class="table table-bordered">
   <tr><th>Dojo</th><td>{{ object.dojo.tradename|default:object.dojo }}</td></tr>
   <tr><th>Data</th><td>{{ object.date|date:"d/m/Y" }}</td></tr>
@@ -19,16 +19,35 @@
   {% endfor %}
 </ul>
 
-<h5 class="mt-4">Requisitos</h5>
-<ul class="list-group mb-3">
-  {% for req in object.requirements.all %} 
-    <li class="list-group-item d-flex justify-content-between">
-      <span>{{ req.subject.name }} (mín: {{ req.min_score }}, máx: {{ req.max_score }})</span>
-    </li>
-  {% empty %}
-    <li class="list-group-item">Sem requisitos cadastrados.</li>
-  {% endfor %}
-</ul>
+<h5 class="mt-4">Matérias por Categoria</h5>
+
+{% for cat in object.categories.all %}
+  <div class="card mb-3">
+    <div class="card-header fw-bold">
+      {{ cat.name_category }} — {{ cat.description }}
+    </div>
+
+    <ul class="list-group list-group-flush">
+      {% for req in object.requirements.all %}
+        {% if req.category == cat %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>
+              {{ req.subject.name }} — 
+              <span class="text-muted small">
+                mín: {{ req.min_score }}, máx: {{ req.max_score }}
+              </span>
+            </span>
+          </li>
+        {% endif %}
+      {% empty %}
+        <li class="list-group-item text-muted">Sem matérias cadastradas para esta categoria.</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% empty %}
+  <p>Nenhuma categoria cadastrada.</p>
+{% endfor %}
+
 
 <!-- 🔽 SEÇÃO AJUSTADA: Inscrições agrupadas por categoria -->
 <h5 class="mt-4">Inscrições por Categoria</h5>

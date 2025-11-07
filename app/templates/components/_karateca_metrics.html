@@ -6,17 +6,21 @@
             <div class="col-md-3">
                 <div class="card bg-primary">
                     <div class="card-body">
-                        <h5 class="card-title"> Número de Alunos</h5>
-                        <p class="card-text text-white font-weight-bold display-6">{{ dojo_metrics.total_karatecas }}</p>
+                        <h5 class="card-title"> Número de Alunos {{ dojo_metrics.total_karatecas }}</h5>
+                        <p class="card-text text-white font-weight-bold display-10">Ativos = {{ dojo_metrics.total_ativos }} Afastados = {{ dojo_metrics.total_afastados }}</p>
+                        <p class="card-text text-white font-weight-bold display-10"> Cancelados = {{ dojo_metrics.total_cancelados }} Licenciados = {{ dojo_metrics.total_licenciados }}</p>
+                        
                     </div>
                 </div>
-            </div>
+            </div> 
 
             <div class="col-md-3">
                 <div class="card bg-success">
                     <div class="card-body"> 
-                        <h5 class="card-title"> Total de Receitas</h5>
-                        <p class="card-text text-white font-weight-bold display-6"> R$ {{ revenue_metrics.total_revenue }} </p>
+                        <h5 class="card-title"> Total de Receitas - {{ revenue_metrics.total_revenue }}</h5>
+                        <p class="card-text text-white font-weight-bold display-10">Mensalidades R$ {{ revenue_metrics.total_monthly_fee }} </p>
+                        <p class="card-text text-white font-weight-bold display-10">Eventos R$ {{ revenue_metrics.total_events }} </p>
+                        
                     </div>
                 </div>
             </div>

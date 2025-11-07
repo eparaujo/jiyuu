@@ -1,76 +1,82 @@
 from django.db import models
+from karatecas.models import Karateca
 from graduations.models import Graduation
-from django.utils import timezone
-from django.core.validators import MinValueValidator, MaxValueValidator
 
-# Create your models here.
-class Event(models.Model):
-    KIND_EVENT = [
-        ('EXAME', 'Exame de Faixa'),
-        ('TREINO', 'Treinamento Especial'),
-        ('CAMPEONATO', 'Campeonato'),
-        ('SEMINARIO', 'Seminário'),
-        ('OUTRO', 'Outro'),
-    ]
-    
-    LEVEL_EVENT = [
-        ('INTERNO', 'Interno (Clube/Dojô)'),
-        ('MUNICIPAL', 'Municipal'),
-        ('REGIONAL', 'Regional'),
-        ('ESTADUAL', 'Estadual'),
-        ('NACIONAL', 'Nacional'),
-        ('INTERNACIONAL', 'Internacional'),
-        ('FESTIVO', 'Festivo/Exibição'),
-    ]
 
-    CATEGORY = [
-        ('INFANTIL', 'Infantil'),
-        ('JUVENIL', 'Juvenil'),
-        ('ADULTO', 'Adulto'),
-        ('MASTER', 'Master'),
-    ]
-
-    MODALITY = [
-        ('KATA', 'Kata'),
-        ('KUMITE', 'Kumite'),
-        ('KATATEAM', "Kata Equipe"),
-        ('KUMITETEAM', 'Kumite Equipe'),
-    ]
-
-    STATUS = [
-        ('PENDENTE', 'Pendente'),
-        ('CONFIRMADA', 'Confirmada'),
-        ('CANCELADA', 'Cancelada'),
-        ('OUTROS', 'Outros'),
-    ]
-
-    name = models.CharField(max_length=150)
-    kind = models.CharField(max_length=20, choices=KIND_EVENT)
-    level = models.CharField(max_length=20, choices=LEVEL_EVENT)
-    date = models.DateField()
-    start_time = models.TimeField(null=True, blank=True)
-    end_time =models.TimeField(null=True, blank=True)
-    local = models.CharField(max_length=300)
-    adress = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-
-    # faixas habilitadas para o exame
-    hability_graduation = models.ForeignKey(Graduation, on_delete=models.DO_NOTHING, related_name='event_graduation')
-
-    #para campeonatos
-    category = models.CharField(max_length=30, choices=CATEGORY)
-    modalitiy = models.CharField(max_length=30, choices=MODALITY)
-
-    #dados da inscrição
-    registration_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    limite_date = models.DateField(null=True, blank=True)
-    
-    organizer = models.CharField(max_length=150, blank=True, null=True) # entidade organizadora do evento (FPK, CBK, etc.)
-    event_organizer = models.CharField(max_length=200, blank=True, null=True) # pessoal responsável por cadastrar dados do evento
-
-    status = models.CharField(max_length=60, choices=STATUS, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class Category(models.Model):
+    name = models.CharField(max_length=50)
 
     def __str__(self):
-        return f'{self.name} - {self.get_kind_display()} - {self.date}'
+        return self.name
+
+
+class Modality(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+
+class Event(models.Model):
+    KIND_CHOICES = [
+        ('Curso', 'Curso'),
+        ('Treino Especial', 'Treino Especial'),
+        ('Campeonato', 'Campeonato'),
+        ('Outros', 'Outros'),
+    ]
+
+    LEVEL_CHOICES = [
+        ('Regional', 'Regional'),
+        ('Estadual', 'Estadual'),
+        ('Nacional', 'Nacional'),
+        ('Internacional', 'Internacional'),
+    ]
+
+    STATUS_CHOICES = [
+        ('Aberto', 'Aberto'),
+        ('Encerrado', 'Encerrado'),
+        ('Cancelado', 'Cancelado'),
+    ]
+
+    name = models.CharField(max_length=100)
+    kind = models.CharField(max_length=30, choices=KIND_CHOICES)
+    level = models.CharField(max_length=30, choices=LEVEL_CHOICES)
+    date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    local = models.CharField(max_length=100)
+    address = models.CharField(max_length=200, blank=True, null=True)
+    description = models.TextField(blank=True)
+
+    hability_graduation = models.ManyToManyField(Graduation, blank=True)
+    category = models.ManyToManyField(Category, blank=True)
+    modality = models.ManyToManyField(Modality, blank=True)
+
+    registration_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    limite_date = models.DateField()
+    organizer = models.CharField(max_length=100)
+    event_organizer = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Aberto")
+
+    participants = models.ManyToManyField(
+        Karateca,
+        through="CourseEnrollment",
+        related_name="event_participations",
+        blank=True
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class CourseEnrollment(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    karateca = models.ForeignKey(Karateca, on_delete=models.CASCADE)
+    enrollment_date = models.DateTimeField(auto_now_add=True)
+    paid = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('event', 'karateca')
+
+    def __str__(self):
+        return f"{self.karateca.name} - {self.event.name}"

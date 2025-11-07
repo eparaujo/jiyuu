@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+  <h3 class="display-6">Inscrever Karateca em Evento</h3>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="event_id" class="form-label">Evento</label>
+          <select name="event_id" id="event_id" class="form-select" required>
+            <option value="">-- Selecione o evento --</option>
+            {% for event in events %}
+              <option value="{{ event.id }}">{{ event.name }} - {{ event.date }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="karateca_id" class="form-label">Karateca</label>
+          <select name="karateca_id" id="karateca_id" class="form-select" required>
+            <option value="">-- Selecione o karateca --</option>
+            {% for karateca in karatecas %}
+              <option value="{{ karateca.id }}">{{ karateca.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Inscrever</button>
+        <a href="{% url 'event_list' %}" class="btn btn-secondary">Voltar</a>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
