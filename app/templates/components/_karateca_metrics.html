@@ -6,7 +6,7 @@
             <div class="col-md-3">
                 <div class="card bg-primary">
                     <div class="card-body">
-                        <h5 class="card-title"> Número de Alunos {{ dojo_metrics.total_karatecas }}</h5>
+                        <h5 class="card-title text-white"> Número de Alunos {{ dojo_metrics.total_karatecas }}</h5>
                         <p class="card-text text-white font-weight-bold display-10">Ativos = {{ dojo_metrics.total_ativos }} Afastados = {{ dojo_metrics.total_afastados }}</p>
                         <p class="card-text text-white font-weight-bold display-10"> Cancelados = {{ dojo_metrics.total_cancelados }} Licenciados = {{ dojo_metrics.total_licenciados }}</p>
                         
@@ -17,7 +17,7 @@
             <div class="col-md-3">
                 <div class="card bg-success">
                     <div class="card-body"> 
-                        <h5 class="card-title"> Total de Receitas - {{ revenue_metrics.total_revenue }}</h5>
+                        <h5 class="card-title text-white"> Total de Receitas - {{ revenue_metrics.total_revenue }}</h5>
                         <p class="card-text text-white font-weight-bold display-10">Mensalidades R$ {{ revenue_metrics.total_monthly_fee }} </p>
                         <p class="card-text text-white font-weight-bold display-10">Eventos R$ {{ revenue_metrics.total_events }} </p>
                         
@@ -28,7 +28,7 @@
             <div class="col-md-3">
                 <div class="card bg-danger">
                     <div class="card-body">
-                        <h5 class="card-title"> Total de Despesas</h5>
+                        <h5 class="card-title text-white"> Total de Despesas</h5>
                         <p class="card-text text-white font-weight-bold display-6"> R$ {{ revenue_metrics.total_expense }} </p>
                     </div>
                 </div>
@@ -37,7 +37,7 @@
             <div class="col-md-3">
                 <div class="card bg-dark">
                     <div class="card-body">
-                        <h5 class="card-title"> Lucro Total</h5>
+                        <h5 class="card-title text-white"> Lucro Total</h5>
                         <p class="card-text text-white font-weight-bold display-6">R$ {{ revenue_metrics.total_profit }} </p>
                     </div>
                 </div>
