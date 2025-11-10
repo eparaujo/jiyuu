@@ -11,6 +11,7 @@ from billingCycle.models import BillingCycle
 from datetime import date
 from decimal import Decimal
 from django.utils import timezone
+import calendar
 
 
 # === ListView de faturas ===
@@ -54,22 +55,51 @@ class InvoiceDetailView(LoginRequiredMixin, DetailView):
 
 # === View para gerar faturas via botão ===
 @login_required
+def invoice_list_view(request):
+    invoices = Invoice.objects.select_related("karateca", "billing_cycle").order_by("-due_date")
+
+    # ciclo atual
+    today = date.today()
+    billing_cycle, _ = BillingCycle.objects.get_or_create(
+        month=today.month,
+        year=today.year,
+        defaults={
+            'start_date': date(today.year, today.month, 1),
+            'end_date': date(today.year, today.month, calendar.monthrange(today.year, today.month)[1]),
+        },
+    )
+
+    context = {
+        "invoices": invoices,
+        "billing_cycle": billing_cycle,
+    }
+    return render(request, "invoices/invoice_list.html", context)
+
+
+@login_required
 def generate_invoices_view(request):
     today = date.today()
     billing_cycle, _ = BillingCycle.objects.get_or_create(
         month=today.month,
         year=today.year,
-        defaults={'start_date': date(today.year, today.month, 1)}
+        defaults={
+            'start_date': date(today.year, today.month, 1),
+            'end_date': date(today.year, today.month, calendar.monthrange(today.year, today.month)[1]),
+        },
     )
 
-    karatecas = Karateca.objects.filter(active="ATIVO")
+    if billing_cycle.closed:
+        messages.warning(request, '⚠️ Este ciclo de faturamento já está fechado.')
+        return redirect('invoice_list')
 
+    karatecas = Karateca.objects.filter(active="ATIVO")
     created_count = 0
+
     for k in karatecas:
         if k.monthly_fee and k.monthly_fee > 0:
-            due_date = date(today.year, today.month, k.due_day)
-            # Verifica se já existe fatura para este ciclo
-            if not Invoice.objects.filter(karateca=k, billing_cycle=billing_cycle).exists():
+            due_date = date(today.year, today.month, min(k.due_day, 28))
+            exists = Invoice.objects.filter(karateca=k, billing_cycle=billing_cycle).exists()
+            if not exists:
                 Invoice.objects.create(
                     karateca=k,
                     billing_cycle=billing_cycle,
@@ -84,6 +114,31 @@ def generate_invoices_view(request):
         messages.info(request, 'Nenhuma nova fatura gerada. Todas já existem para este mês.')
 
     return redirect('invoice_list')
+
+@login_required
+def close_cycle_view(request):
+    today = date.today()
+    cycle = BillingCycle.objects.filter(month=today.month, year=today.year).first()
+    if not cycle:
+        messages.error(request, "❌ Nenhum ciclo encontrado para este mês.")
+        return redirect("invoice_list")
+
+    cycle.close_cycle()
+    messages.success(request, "🔒 Ciclo fechado com sucesso.")
+    return redirect("invoice_list")
+
+
+@login_required
+def reset_cycle_view(request):
+    today = date.today()
+    cycle = BillingCycle.objects.filter(month=today.month, year=today.year).first()
+    if not cycle:
+        messages.error(request, "❌ Nenhum ciclo encontrado para este mês.")
+        return redirect("invoice_list")
+
+    deleted = cycle.reset_cycle(confirm=True)
+    messages.success(request, f"♻️ {deleted} fatura(s) apagada(s) e ciclo reaberto.")
+    return redirect("invoice_list")
 
 
 # === View para marcar fatura como paga ===

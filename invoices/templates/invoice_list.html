@@ -4,12 +4,42 @@
 <div class="container mt-4">
   <h3 class="mb-4">Lista de Faturas</h3>
 
-  <a href="{% url 'invoice_generate' %}" class="btn btn-primary mb-3">
-    Gerar Faturamento Mensal
-  </a>
+  <!-- === Ações de ciclo de faturamento === -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">
+      Ciclo atual: {{ billing_cycle.month }}/{{ billing_cycle.year }}
+      {% if billing_cycle.closed %}
+        <span class="badge bg-danger ms-2">Ciclo Fechado</span>
+      {% else %}
+        <span class="badge bg-success ms-2">Ciclo Aberto</span>
+      {% endif %}
+    </h5>
 
+    <div class="d-flex flex-wrap gap-2">
+      {% if not billing_cycle.closed %}
+        <!-- Botão: Gerar Faturas -->
+        <a href="{% url 'generate_invoices' %}" class="btn btn-primary btn-sm">
+          💰 Gerar Faturas
+        </a>
 
-  <!-- filtros rápidos -->
+        <!-- Botão: Fechar Ciclo -->
+        <a href="{% url 'close_cycle' %}" class="btn btn-warning btn-sm">
+          🔒 Fechar Ciclo
+        </a>
+
+        <!-- Botão: Limpar Faturas -->
+        <a href="{% url 'reset_cycle' %}"
+           class="btn btn-danger btn-sm"
+           onclick="return confirm('Tem certeza que deseja apagar TODAS as faturas deste ciclo? Esta ação não pode ser desfeita.');">
+          ♻️ Limpar Faturas
+        </a>
+      {% else %}
+        <span class="text-muted fst-italic">Ciclo encerrado — ações desabilitadas.</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- === Filtros rápidos === -->
   <form method="get" class="row g-2 mb-3">
     <div class="col-auto">
       <input type="text" name="karateca" value="{{ request.GET.karateca }}" class="form-control" placeholder="Pesquisar por karateca">
@@ -26,11 +56,11 @@
     </div>
   </form>
 
+  <!-- === Tabela de faturas === -->
   <div class="table-responsive">
     <table class="table table-striped table-bordered">
       <thead>
         <tr> 
-          
           <th>Karateca</th>
           <th>Mês/Ano</th>
           <th>Vencimento</th>
@@ -42,7 +72,6 @@
       <tbody>
         {% for invoice in invoices %}
         <tr>
-          
           <td>{{ invoice.karateca.name }}</td>
           <td>
             {% if invoice.billing_cycle %}
@@ -53,7 +82,6 @@
           </td>
           <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
           <td>R$ {{ invoice.total_amount }}</td>
-
           <td>
             {% if invoice.paid %}
               <span class="badge bg-success">Pago</span>
@@ -61,10 +89,8 @@
               <span class="badge bg-warning text-dark">Pendente</span>
             {% endif %}
           </td>
-
           <td>
             <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-sm btn-info">Ver</a>
-
             {% if not invoice.paid %}
               <a href="{% url 'invoice_mark_paid' invoice.pk %}" class="btn btn-sm btn-success ms-1">
                 Marcar como Pago
@@ -79,6 +105,7 @@
     </table>
   </div>
 
+  <!-- === Paginação e total geral === -->
   {% include 'components/_pagination.html' %}
   <div class="mt-3 text-end"><strong>Total geral: R$ {{ total_amount }}</strong></div>
 </div>
