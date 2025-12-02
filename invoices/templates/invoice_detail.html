@@ -1,24 +1,29 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <div class="container mt-4">
-  <h3>Fatura #{{ invoice.id }} — {{ invoice.karateca.name }}</h3>
+  <h3>Fatura - {{ invoice.billing_cycle.month }} — {{ invoice.karateca.name }}</h3>
   <p><strong>Mês/Ano:</strong>
     {% if invoice.billing_cycle %} {{ invoice.billing_cycle.month }}/{{ invoice.billing_cycle.year }} {% endif %}
   </p>
-  <p><strong>Vencimento:</strong> {{ invoice.due_date|date:"d/m/Y" }}</p>
-  <p><strong>Total:</strong> R$ {{ invoice.total_amount }}</p>
-  <p><strong>Status:</strong> {% if invoice.paid %}Pago em {{ invoice.paid_at|date:"d/m/Y H:i" }}{% else %}Pendente{% endif %}</p>
-
-  <h5 class="mt-4">Itens</h5>
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Descrição</th>
-        <th>Tipo</th>
-        <th>Valor</th>
-        <th>Vencimento</th>
-      </tr>
-    </thead>
+  <div class="card">
+    <div class="card-body">
+        <p><strong>Vencimento:</strong> {{ invoice.due_date|date:"d/m/Y" }}</p>
+        <p><strong>Total:</strong> R$ {{ invoice.total_amount }}</p>
+        <p><strong>Status:</strong> {% if invoice.paid %}Pago em {{ invoice.paid_at|date:"d/m/Y H:i" }}{% else %}Pendente{% endif %}</p>
+    </div>
+  </div>
+  
+    <h5 class="mt-4">Itens</h5>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Descrição</th>
+          <th>Tipo</th>
+          <th>Valor</th>
+          <th>Vencimento</th>
+        </tr>
+      </thead>
     <tbody>
       {% for item in invoice.items.all %}
       <tr>
