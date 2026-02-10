@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="display-6">Alterar Role do Membro</h3>
+
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Usuário:</strong> {{ object.user.get_full_name }}</p>
+
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-primary">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <a href="{% url 'dojo_member_list' object.dojo.id %}" class="btn btn-secondary mt-3">
+        Voltar
+    </a>
+</div>
+{% endblock %}

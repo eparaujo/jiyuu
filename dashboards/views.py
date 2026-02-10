@@ -12,6 +12,7 @@ from . import models, forms
 from dashboards.serializers import DashboardSerializer
 from dashboards.models import Dashboard
 from django.http import HttpResponse
+from dojos.models import DojoMembership
 
 
 
@@ -36,15 +37,57 @@ class DashboardListView(LoginRequiredMixin, ListView):
 
 class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    
-    def get(self, request, *args, **kwargs):
 
-        try:
-            dashboard = Dashboard.objects.first()  # ou filtrar pelo usuário, dojo etc.
-            serializer = DashboardSerializer(dashboard)
-            return Response(serializer.data)
-        except Dashboard.DoesNotExist:
-            return Response({"detail": "Nenhum dashboard encontrado"}, status=404)
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        # 🔹 Descobre vínculo do usuário com o dojo
+        membership = (
+            DojoMembership.objects
+            .select_related("dojo")
+            .filter(user=user)
+            .first()
+        )
+
+        if not membership:
+            return Response(
+                {"detail": "Usuário sem vínculo com dojo"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        dojo = membership.dojo
+        role = membership.role
+
+        # 🔹 Seleciona dashboard conforme papel
+        if role in ["OWNER", "ADMIN"]:
+            dashboard = (
+                Dashboard.objects
+                .select_related("dojo")
+                .filter(dojo=dojo)
+                .first()
+            )
+        else:
+            # STUDENT (ou qualquer outro papel)
+            dashboard = (
+                Dashboard.objects
+                .select_related("dojo")
+                .filter(dojo=dojo)
+                .first()
+            )
+
+        if not dashboard:
+            return Response(
+                {"detail": "Dashboard não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = DashboardSerializer(
+            dashboard,
+            context={"request": request}
+        )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
 
 class DashboardCreateView(LoginRequiredMixin, CreateView):
     model = models.Dashboard

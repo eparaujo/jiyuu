@@ -2,6 +2,10 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.db import transaction, IntegrityError
 from karatecas.models import Karateca
+from dojos.models import DojoMembership
+from dojos.choices import DojoRole
+
+
 
 
 class KaratecaSerializer(serializers.ModelSerializer):
@@ -45,6 +49,7 @@ class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         email = validated_data.get('email')
         name = validated_data.get('name')
+        dojo = validated_data.get('dojo')
 
         try:
             # 🔹 Cria usuário
@@ -62,9 +67,17 @@ class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
                 **validated_data
             )
 
+            # 🔴 REGRA DE NEGÓCIO CENTRAL
+            DojoMembership.objects.create(
+                user=user,
+                dojo=dojo,
+                role=DojoRole.STUDENT            
+            )
+
             return karateka
 
         except IntegrityError as e:
             raise serializers.ValidationError({
                 "detail": f"Erro de integridade ao salvar o Karateca: {str(e)}"
             })
+

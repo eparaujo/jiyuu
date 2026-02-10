@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="display-6 text-danger">Inativar Aluno/Atleta</h3>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <p>
+                Você tem certeza que deseja <strong> inativar</strong> este membro do dojo?
+            </p>
+
+            <ul class="list-group mb-3">
+                <li class="list-group-item">
+                    <strong>Nome:</strong> {{ object.user.get_full_name }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Role:</strong> {{ object.get_role_display }}
+                </li>
+            </ul>
+
+            <form method="post">
+                {% csrf_token %}
+                <button class="btn btn-danger">
+                    Confirmar Remoção
+                </button>
+
+                <a href="{% url 'dojo_member_list' object.dojo.id %}"
+                   class="btn btn-secondary ms-2">
+                    Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

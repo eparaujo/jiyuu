@@ -28,8 +28,8 @@ SECRET_KEY = 'django-insecure-czgo$v&fs_&spfg=cf1e15^emi1is5bliw&zru7ope*3bbw03m
 DEBUG = True
 
 #ALLOWED_HOSTS = ['eparaujo.pythonanywhere.com']
-#ALLOWED_HOSTS = ['*']
-ALLOWED_HOSTS = ['http://192.168.0.84:8001', 'localhost']
+ALLOWED_HOSTS = ['*']
+#ALLOWED_HOSTS = ['http://192.168.0.84:8001', 'localhost']
 
 # Application definition
 

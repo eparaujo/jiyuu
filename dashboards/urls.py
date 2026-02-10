@@ -8,5 +8,5 @@ urlpatterns = [
     path("dashboards/<int:pk>/update/", views.DashboardUpdateView.as_view(), name="dashboard_update"),
     path("dashboards/<int:pk>/delete/", views.DashboardDeleteView.as_view(), name="dashboard_delete"),
     # endpoint externo para o flutter
-    path("api/v1/dashboardapi/", views.DashboardAPIView.as_view(), name="dashboard_api"),
+    path("api/v1/dashboardapi/", views.DashboardAPIView.as_view(), name="dashboard_api"),    
 ]

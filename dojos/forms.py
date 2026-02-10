@@ -1,5 +1,7 @@
 from django import forms
 from . import models
+from dojos.models import DojoMembership
+from dojos.choices import DojoRole
  
 
 class DojoForm(forms.ModelForm):
@@ -44,3 +46,10 @@ class DojoForm(forms.ModelForm):
             'sensei': 'Senseis',
         }
 
+class DojoMembershipRoleForm(forms.ModelForm):
+    class Meta:
+        model = DojoMembership
+        fields = ['role']
+        widgets = {
+            'role': forms.Select(attrs={'class': 'form-control'})
+        }

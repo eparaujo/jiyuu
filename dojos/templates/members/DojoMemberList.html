@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="display-6">Alunos/Atletas do Dojo</h3>
+
+    {% if requester_role == "OWNER" %}
+        <a href="{% url 'dojo_member_inactive_list' dojo.id %}"
+            class="btn btn-primary mb-3">
+            Ver Alunos/Atletas inativos
+        </a>
+    {% endif %}
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Role</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>{{ member.user.get_full_name }}</td>
+                        <td>{{ member.get_role_display }}</td>
+
+                        <td class="text-center">
+
+                            {% comment %}
+                            ✏ Editar role:
+                            - OWNER pode editar todos (exceto outro OWNER, backend bloqueia)
+                            - ADMIN pode editar STUDENT
+                            {% endcomment %}
+
+                        
+                            {% if requester_role == "OWNER" %}
+                                <a href="{% url 'dojo_member_edit_role' member.id %}"
+                                class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                            {% elif requester_role == "ADMIN" and member.role == "STUDENT" %}
+                                <a href="{% url 'dojo_member_edit_role' member.id %}"
+                                class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            {% endif %}
+
+                            {% comment %}
+                            🗑 Inativar membro:
+                            - Apenas OWNER
+                            - Nunca inativar a si mesmo
+                            {% endcomment %}
+                            {% if requester_role == "OWNER" and member.user != request.user %}
+                                <a href="{% url 'dojo_member_deactivate' member.id %}"
+                                class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">
+                            Nenhum membro encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

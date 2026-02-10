@@ -73,10 +73,14 @@ SGK - Cadastro de Dojos
                         <a href="{% url 'dojo_update' dojo.id %}" class="btn btn-warning btn-sm">
                             <i class="bi bi-pencil"></i>
                         </a>
+
+                        <a href="{% url 'dojo_member_list' dojo.id %}" class="btn btn-info btn-sm">
+                            <i class="bi bi-search"></i>
+                        </a>
                         
                         <a href="{% url 'dojo_delete' dojo.id %}" class="btn btn-danger btn-sm">
                             <i class="bi bi-trash"></i>
-                        </a>
+                        </a>                        
                     </td>
                 </tr>
             {% endfor %}
