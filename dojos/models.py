@@ -59,4 +59,4 @@ class DojoMembership(models.Model):
         verbose_name_plural = 'Vínculos com Dojo'
 
     def __str__(self):
-        return f"{self.user.username} - {self.dojo.tradename} ({self.role})"
+        return f"{self.user.username} - {self.dojo.tradename} ({self.role})" 

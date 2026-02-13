@@ -47,8 +47,6 @@ urlpatterns = [
 
     # lista karatecas por categoria
     # ✅ Corrigido para casar com o Flutter
-    path("api/v1/exams/<int:pk>/categories/<str:category>/participants/", 
-        views.ExamParticipantsByCategoryAPIView.as_view(), 
-        name="exam-participants-by-category-api"),
+    path("api/v1/exams/<int:pk>/categories/<str:category>/participants/", views.ExamParticipantsByCategoryAPIView.as_view(), name="exam-participants-by-category-api"),
 
 ]

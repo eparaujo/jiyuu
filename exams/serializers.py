@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from .models import Exam, ExamEnrollment, ExamResult, ExamRequirement, ExamCategory
 from senseis.models import Sensei
-#from . import serializers
+from dojos.models import DojoMembership
+from dojos.choices import DojoRole
+from rest_framework.exceptions import PermissionDenied
 
 
  
@@ -120,6 +122,43 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         """
         results_data = validated_data.pop("results", None)
         request = self.context.get("request")
+
+        sensei_name = "Desconhecido"
+        if request and hasattr(request, "user") and request.user.is_authenticated:
+            sensei_name = request.user.get_full_name() or request.user.username
+
+        # 🔹 Atualiza ou cria os resultados por matéria
+        if results_data:
+            for result_data in results_data:
+                subject = result_data["subject"]
+                score = result_data.get("score", 0)
+                comments = result_data.get("comments", "")
+
+                ExamResult.objects.update_or_create(
+                    enrollment=instance,
+                    subject=subject,
+                    defaults={
+                        "score": score,
+                        "comments": comments,
+                        "sensei_examiner": sensei_name,
+                    },
+                )
+
+        # 🔹 Atualiza apenas campos simples do Enrollment (sem quebrar relações)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+
+    """def update(self, instance, validated_data):
+        
+        #Atualiza notas (results) do participante.
+        #Também grava o nome do sensei examinador autenticado.
+        
+        results_data = validated_data.pop("results", None)
+        request = self.context.get("request")
         
         sensei_name = "Desconhecido"
         if request and hasattr(request, "user") and request.user.is_authenticated:
@@ -141,7 +180,7 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
                     }
                 )
 
-        return super().update(instance, validated_data)
+        return super().update(instance, validated_data)"""
 
 
 

@@ -16,6 +16,10 @@ from .models import ExamEnrollment, Exam
 from examcategories.models import ExamCategory
 from senseis.models import Sensei
 from django.shortcuts import get_object_or_404
+from exams.permissions import IsOwnerOrExaminer
+from rest_framework.permissions import IsAuthenticated
+from collections import OrderedDict
+
 
 
 # -------------------------------
@@ -254,12 +258,6 @@ class ExamParticipantsByCategoryView(LoginRequiredMixin, View):
 # -------------------------------
 # EXAM RESULT
 # -------------------------------
-from collections import OrderedDict
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
-from . import models
-
-
 class ExamResultListView(LoginRequiredMixin, ListView):
     """
     Lista os resultados de exame agrupados por karateca.
@@ -339,7 +337,7 @@ class ExamResultDeleteView(LoginRequiredMixin, DeleteView):
 class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = models.Exam.objects.all()
     serializer_class = serializers.ExamSerializer
-    
+    permission_classes = [IsAuthenticated, IsOwnerOrExaminer]
     
 
 class ExamCreateListAPIView(generics.ListCreateAPIView):
@@ -355,6 +353,7 @@ class ExamCreateListAPIView(generics.ListCreateAPIView):
 class ExamEnrollmentUpdateAPIView(generics.RetrieveUpdateAPIView):
     queryset = ExamEnrollment.objects.all()
     serializer_class = ExamEnrollmentSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrExaminer]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

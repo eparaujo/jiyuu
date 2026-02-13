@@ -196,7 +196,7 @@ class DojoMemberRoleUpdateView(generics.UpdateAPIView):
             and serializer.instance.role == DojoRole.ADMIN
         ):
             raise PermissionDenied("Admin não pode alterar outro Admin.")
-
+ 
         serializer.save()
     
 class DojoMemberActiveUpdateView(generics.UpdateAPIView):
