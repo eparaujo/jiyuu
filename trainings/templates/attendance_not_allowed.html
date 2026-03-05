@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-danger text-center">
+        <h4 class="alert-heading">{{ title }}</h4>
+        <p>{{ message }}</p>
+        <hr>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">
+            Voltar ao Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

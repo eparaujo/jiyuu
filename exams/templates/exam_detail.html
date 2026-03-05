@@ -3,21 +3,83 @@
 {% block content %}
 
 <h4 class="mb-3">Exame - {{ object.date }}</h4>
+
 <table class="table table-bordered">
-  <tr><th>Dojo</th><td>{{ object.dojo.tradename|default:object.dojo }}</td></tr>
-  <tr><th>Data</th><td>{{ object.date|date:"d/m/Y" }}</td></tr>
-  <tr><th>Descrição</th><td>{{ object.description|default:"—" }}</td></tr>
-  <tr><th>Status do Exame</th><td>{{ object.status }}</td></tr>
+  <tr>
+    <th>Dojo</th>
+    <td>{{ object.dojo.tradename|default:object.dojo }}</td>
+  </tr>
+  <tr>
+    <th>Data</th>
+    <td>{{ object.date|date:"d/m/Y" }}</td>
+  </tr>
+  <tr>
+    <th>Descrição</th>
+    <td>{{ object.description|default:"—" }}</td>
+  </tr>
+  <tr>
+    <th>Status do Exame</th>
+    <td>{{ object.status }}</td>
+  </tr>
 </table>
+
+<!-- ========================= -->
+<!-- INSCRIÇÃO DO KARATECA -->
+<!-- ========================= -->
+
+{% if user.is_authenticated and user.karateka %}
+  <div class="card mb-4">
+    <div class="card-body">
+
+      <h5 class="card-title mb-3">Inscrição no Exame</h5>
+
+      {% if can_do_exam %}
+        <!-- Pode se inscrever -->
+        <form method="post" action="{% url 'enrollment_create' %}">
+          {% csrf_token %}
+          <input type="hidden" name="exam" value="{{ object.id }}">
+          <input type="hidden" name="karateca" value="{{ user.karateka.id }}">
+
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle"></i>
+            Inscrever-me no exame
+          </button>
+        </form>
+
+      {% else %}
+        <!-- Em carência -->
+        <button class="btn btn-secondary" disabled>
+          <i class="bi bi-lock"></i>
+          Inscrição indisponível
+        </button>
+
+        <div class="alert alert-warning mt-3 mb-0">
+          {{ can_do_exam_reason }}
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+{% endif %}
+
+<!-- ========================= -->
+<!-- CATEGORIAS DO EXAME -->
+<!-- ========================= -->
 
 <h5 class="mt-4">Categorias do Exame</h5>
 <ul class="list-group mb-3">
   {% for cat in object.categories.all %}
-    <li class="list-group-item">{{ cat.name_category }} — {{ cat.description }}</li>
+    <li class="list-group-item">
+      {{ cat.name_category }} — {{ cat.description }}
+    </li>
   {% empty %}
     <li class="list-group-item">Sem categorias associadas.</li>
   {% endfor %}
 </ul>
+
+<!-- ========================= -->
+<!-- MATÉRIAS POR CATEGORIA -->
+<!-- ========================= -->
 
 <h5 class="mt-4">Matérias por Categoria</h5>
 
@@ -32,15 +94,17 @@
         {% if req.category == cat %}
           <li class="list-group-item d-flex justify-content-between">
             <span>
-              {{ req.subject.name }} — 
+              {{ req.subject.name }}
               <span class="text-muted small">
-                mín: {{ req.min_score }}, máx: {{ req.max_score }}
+                (mín: {{ req.min_score }}, máx: {{ req.max_score }})
               </span>
             </span>
           </li>
         {% endif %}
       {% empty %}
-        <li class="list-group-item text-muted">Sem matérias cadastradas para esta categoria.</li>
+        <li class="list-group-item text-muted">
+          Sem matérias cadastradas para esta categoria.
+        </li>
       {% endfor %}
     </ul>
   </div>
@@ -48,19 +112,24 @@
   <p>Nenhuma categoria cadastrada.</p>
 {% endfor %}
 
+<!-- ========================= -->
+<!-- INSCRIÇÕES POR CATEGORIA -->
+<!-- ========================= -->
 
-<!-- 🔽 SEÇÃO AJUSTADA: Inscrições agrupadas por categoria -->
 <h5 class="mt-4">Inscrições por Categoria</h5>
+
 {% for cat in object.categories.all %}
   <div class="card mb-3">
     <div class="card-header fw-bold">
       {{ cat.name_category }}
     </div>
+
     <ul class="list-group list-group-flush">
       {% for enr in object.enrollments.all %}
         {% if enr.category == cat %}
           <li class="list-group-item">
-            <strong>{{ enr.karateca }}</strong> — {{ enr.current_graduation.name|default:"Sem graduação" }}
+            <strong>{{ enr.karateca }}</strong>
+            — {{ enr.current_graduation.name|default:"Sem graduação" }}
           </li>
         {% endif %}
       {% empty %}
@@ -72,15 +141,23 @@
   <p>Nenhuma categoria cadastrada.</p>
 {% endfor %}
 
+<!-- ========================= -->
+<!-- AÇÕES -->
+<!-- ========================= -->
+
 <div class="d-flex gap-2">
   <a href="{% url 'exam_list' %}" class="btn btn-secondary">Voltar</a>
   <a href="{% url 'exam_update' object.id %}" class="btn btn-warning">Editar</a>
   <a href="{% url 'exam_delete' object.id %}" class="btn btn-danger">Excluir</a>
 </div>
 
-<!-- Flutter integration link -->
+<!-- ========================= -->
+<!-- FLUTTER -->
+<!-- ========================= -->
+
 <p class="mt-3 text-muted small">
-  Endpoint para Flutter: <code>{{ request.scheme }}://{{ request.get_host }}/api/v1/exams/{{ object.id }}/</code>
+  Endpoint para Flutter:
+  <code>{{ request.scheme }}://{{ request.get_host }}/api/v1/exams/{{ object.id }}/</code>
 </p>
 
 {% endblock %}

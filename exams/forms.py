@@ -2,6 +2,9 @@ from django import forms
 from . import models
 from .models import ExamEnrollment
 from examcategories.models import ExamCategory
+from django.core.exceptions import ValidationError
+from django.utils.timezone import now
+from datetime import timedelta
 
 # -------------------------------
 # EXAM
@@ -60,27 +63,30 @@ class ExamRequirementForm(forms.ModelForm):
             "min_score": "Nota Mínima para Aprovação",
         }
 
-
 # -------------------------------
 # EXAM ENROLLMENT
 # -------------------------------
 class ExamEnrollmentForm(forms.ModelForm):
-    class Meta:
-        model = models.ExamEnrollment
-        fields = ["exam", "karateca", "current_graduation", "category"]
-        widgets = {
-            "exam": forms.Select(attrs={"class": "form-control"}),
-            "karateca": forms.Select(attrs={"class": "form-control"}),
-            "current_graduation": forms.Select(attrs={"class": "form-control"}),
-            "category": forms.Select(attrs={"class": "form-control"}),
-        }
-        labels = {
-            "exam": "Exame",
-            "karateca": "Karateca",
-            "current_graduation": "Graduação Atual",
-            "category": "Categoria de Graduação",
-        }
 
+    class Meta:
+        model = ExamEnrollment
+        fields = ["karateca", "current_graduation", "category"]
+
+    def __init__(self, *args, **kwargs):
+        exam = kwargs.pop("exam", None)
+        if not exam:
+            raise ValueError("ExamEnrollmentForm exige um exame")
+
+        super().__init__(*args, **kwargs)
+
+        self.exam = exam
+
+        self.fields["karateca"].queryset = models.Karateca.objects.filter(
+            dojo=exam.dojo,
+            active="ATIVO"
+        ).order_by("name")
+
+        self.fields["category"].queryset = exam.categories.all()
 
 # -------------------------------
 # EXAM RESULT

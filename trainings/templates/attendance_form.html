@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Registro de Presença{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3 class="mb-4">Registro de Presença</h3>
+
+    <!-- FORMULÁRIO DE BUSCA -->
+    <form method="get" class="row g-3 mb-4">
+
+        <!-- DOJO -->
+        <div class="col-md-4">
+            <label class="form-label">Dojo</label>
+            <select name="dojo" class="form-select" required>
+                <option value="">Selecione o dojo</option>
+                {% for dojo in dojos %}
+                    <option value="{{ dojo.id }}"
+                        {% if selected_dojo and dojo.id == selected_dojo.id %}selected{% endif %}>
+                        {{ dojo.tradename }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- DATA -->
+        <div class="col-md-4">
+            <label class="form-label">Data do Treino</label>
+            <input type="date"
+                   name="training_date"
+                   class="form-control"
+                   value="{{ selected_date }}"
+                   required>
+        </div>
+
+        <!-- BOTÃO -->
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">
+                Buscar Karatecas
+            </button>
+        </div>
+
+    </form>
+
+    {% if selected_dojo and selected_date %}
+
+        {% if karatecas %}
+            <!-- FORMULÁRIO DE PRESENÇA -->
+            <form method="post">
+                {% csrf_token %}
+
+                <input type="hidden" name="dojo" value="{{ selected_dojo.id }}">
+                <input type="hidden" name="training_date" value="{{ selected_date }}">
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">Presente</th>
+                                <th>Nome</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for karateca in karatecas %}
+                                <tr>
+                                    <td class="text-center">
+                                        <input type="checkbox"
+                                               name="present_{{ karateca.id }}"
+                                               class="form-check-input">
+                                    </td>
+                                    <td>{{ karateca.name }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" class="btn btn-success mt-3">
+                    Salvar Presenças
+                </button>
+            </form>
+        {% else %}
+            <div class="alert alert-warning">
+                Nenhum karateca encontrado para este dojo.
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="alert alert-info">
+            Selecione o dojo e a data para registrar presença.
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

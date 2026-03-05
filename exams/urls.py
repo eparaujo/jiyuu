@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     path('exams/list/', views.ExamListView.as_view(), name='exam_list'),
     path('exams/create/', views.ExamCreateView.as_view(), name='exam_create'),
-    path('exams/<int:pk>/detail/', views.ExamDetailView.as_view(), name='exam_detail'),
+    path('exams/<int:pk>/detail/', views.ExamDetailView.as_view(), name='exam_detail'), 
     path('exams/<int:pk>/update/', views.ExamUpdateView.as_view(), name='exam_update'),
     path('exams/<int:pk>/delete/', views.ExamDeleteView.as_view(), name='exam_delete'),
     
@@ -22,7 +22,7 @@ urlpatterns = [
     path('requirements/<int:pk>/delete/', views.ExamRequirementDeleteView.as_view(), name='requirement_delete'),
 
     path('enrollments/list/', views.ExamEnrollmentListView.as_view(), name='enrollment_list'),
-    path('enrollments/create/', views.ExamEnrollmentCreateView.as_view(), name='enrollment_create'),
+    #path('enrollments/create/', views.ExamEnrollmentCreateView.as_view(), name='enrollment_create'),
     path('enrollments/<int:pk>/detail/', views.ExamEnrollmentDetailView.as_view(), name='enrollment_detail'),
     path('enrollments/<int:pk>/update/', views.ExamEnrollmentUpdateView.as_view(), name='enrollment_update'),
     path('enrollments/<int:pk>/delete/', views.ExamEnrollmentDeleteView.as_view(), name='enrollment_delete'),
@@ -46,7 +46,12 @@ urlpatterns = [
     path('api/v1/exams/<int:pk>/categories/', views.ExamCategoryListAPIView.as_view(), name='exam-category-list-api'),
 
     # lista karatecas por categoria
-    # ✅ Corrigido para casar com o Flutter
     path("api/v1/exams/<int:pk>/categories/<str:category>/participants/", views.ExamParticipantsByCategoryAPIView.as_view(), name="exam-participants-by-category-api"),
-
+    path("api/v1/exams/last-result/", views.LastExamResultView.as_view(), name='last-exam-result-karateca'),
+    path("api/v1/last-result/details/", views.LastExamResultDetailView.as_view(), name='detail-exam-result-karateca'),    
+    # API para detalhes completos do exame (somente leitura - Flutter)
+    path("api/v1/exams/next/", views.NextExamAPIView.as_view(), name="exam-detail-read-api",),
+    # ENROLLMENTS (sempre dentro do exame)
+    path("exams/<int:exam_id>/enrollments/",  views.ExamEnrollmentListView.as_view(), name="exam_enrollment_list"),
+    path("exams/<int:exam_id>/enrollments/create/", views.ExamEnrollmentCreateView.as_view(), name="enrollment_create"),
 ]

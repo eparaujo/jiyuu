@@ -14,6 +14,13 @@ class KaratecaSerializer(serializers.ModelSerializer):
         fields = '__all__' 
 
 
+class GraduationStatusSerializer(serializers.Serializer):
+    current_graduation = serializers.CharField(allow_null=True)
+    next_graduation = serializers.CharField(allow_null=True)
+    min_months = serializers.IntegerField()
+    elapsed_months = serializers.IntegerField()
+    remaining_months = serializers.IntegerField()
+
 class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
     """
     Serializer público para cadastro de Karatecas.

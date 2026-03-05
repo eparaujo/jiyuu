@@ -7,6 +7,12 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from rest_framework import generics, permissions
 from . import serializers
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from datetime import date
+from graduations.models import Graduation
+#from serializers import GraduationStatusSerializer
 
 
 class KaratecaListView(LoginRequiredMixin, ListView):
@@ -56,3 +62,55 @@ class PublicKaratekaRegisterView(generics.CreateAPIView):
     queryset = models.Karateca.objects.all()
     serializer_class = serializers.PublicKaratekaRegisterSerializer
     permission_classes = [permissions.AllowAny]
+
+
+class KaratecaGraduationStatusAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        karateca = request.user.karateka
+
+        # Segurança
+        if not karateca or not karateca.graduation:
+            return Response({
+                "current_graduation": None,
+                "next_graduation": None,
+                "min_months": 0,
+                "elapsed_months": 0,
+                "remaining_months": 0
+            })
+
+        current = karateca.graduation
+
+        next_graduation = Graduation.objects.filter(
+            order__gt=current.order
+        ).order_by('order').first()
+
+        if not next_graduation or not karateca.graduation_date:
+            return Response({
+                "current_graduation": current.name,
+                "next_graduation": next_graduation.name if next_graduation else None,
+                "min_months": next_graduation.min_months if next_graduation else 0,
+                "elapsed_months": 0,
+                "remaining_months": next_graduation.min_months if next_graduation else 0
+            })
+
+        # 🔹 cálculo de meses
+        today = date.today()
+        delta_months = (
+            (today.year - karateca.graduation_date.year) * 12 +
+            (today.month - karateca.graduation_date.month)
+        )
+
+        remaining = max(0, next_graduation.min_months - delta_months)
+
+        data = {
+            "current_graduation": current.name,
+            "next_graduation": next_graduation.name,
+            "min_months": next_graduation.min_months,
+            "elapsed_months": delta_months,
+            "remaining_months": remaining
+        }
+
+        serializer = GraduationStatusSerializer(data)
+        return Response(serializer.data)

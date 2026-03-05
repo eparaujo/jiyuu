@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'invoices',
     'invoiceItem',
     'django_crontab',
+    'trainings',
 ]
 
 LOGIN_URL = 'login'

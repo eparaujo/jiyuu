@@ -50,3 +50,21 @@ class IsOwnerOrExaminer(BasePermission):
             ],
             is_active=True,
         ).exists()
+    
+class IsExamStudent(BasePermission):
+    """
+    Permite acesso apenas se o usuário for aluno
+    e estiver inscrito no exame.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        # Garante que é um aluno
+        if not hasattr(user, "student"):
+            return False
+
+        # Garante vínculo com o exame
+        return obj.registrations.filter(
+            student=user.student
+        ).exists()

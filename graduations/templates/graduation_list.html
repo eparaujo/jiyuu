@@ -32,6 +32,8 @@ SGK - Cadastro de Graduação de Faixa
             <tr>
                 <th>ID</th>
                 <th>Graduação - Faixa</th>
+                <th>Ordem de Graduações - ex. Branca = 1</th>
+                <th>Carência Mínima - em meses</th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -40,6 +42,8 @@ SGK - Cadastro de Graduação de Faixa
                 <tr>
                     <td> {{ graduation.id }} </td>
                     <td> {{ graduation.name }} </td>
+                    <td> {{ graduation.order }} </td>
+                    <td> {{ graduation.min_months }} </td>
                     <td> 
                         <a href="{% url 'graduation_detail' graduation.id %}" class="btn btn-info btn-sm">
                             <i class="bi bi-eye"></i>

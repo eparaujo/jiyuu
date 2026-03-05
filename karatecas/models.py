@@ -25,7 +25,7 @@ class Karateca(models.Model):
 
     # 🔹 Dados principais
     name = models.CharField(max_length=200)
-    genre = models.ForeignKey(Genre, on_delete=models.PROTECT,        related_name='karatekas')
+    genre = models.ForeignKey(Genre, on_delete=models.PROTECT, related_name='karatekas')
     cpf = models.CharField(max_length=30, blank=True, null=True)
     email = models.EmailField(unique=True)
     celphone = models.CharField(max_length=60, blank=True, null=True)
@@ -33,6 +33,7 @@ class Karateca(models.Model):
     # 🔹 Graduação e faixa
     graduation = models.ForeignKey(Graduation, on_delete=models.PROTECT, related_name='karatekas', blank=True, null=True)
     dan = models.CharField(max_length=60, blank=True, null=True)  # 🔹 Grau (1º Dan, 2º Dan, etc.)
+    graduation_date = models.DateField(null=True, blank=True, help_text="Data em que a graduação atual foi obtida")
 
     # 🔹 Outras informações fixas
     dojo = models.ForeignKey(Dojo, on_delete=models.PROTECT, related_name='karatekas')

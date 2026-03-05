@@ -15,4 +15,5 @@ urlpatterns = [
     # API
     path('api/events/', views.EventListAPI.as_view(), name='api_event_list'),
     path('api/enrollments/', views.CourseEnrollmentCreateAPI.as_view(), name='api_course_enrollment'),
+    path("api/events/<int:pk>/", views.EventDetailAPI.as_view(), name="api_event_detail"),
 ]

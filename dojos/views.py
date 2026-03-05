@@ -155,7 +155,6 @@ class DojoMemberListView(LoginRequiredMixin, ListView):
             dojo_id=dojo_id
         )
 
-        # 🔴 AJUSTE ESSENCIAL (não quebra nada)
         dojo = get_object_or_404(Dojo, id=dojo_id)
 
         context["requester_role"] = membership.role

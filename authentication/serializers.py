@@ -29,26 +29,4 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         }
 
         return data
-
-
-
-"""class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = 'username'
-
-    def validate(self, attrs):
-        
-        credentials = {
-            'username': attrs.get('username'),
-            'password': attrs.get('password')
-        }
-        #print("login recebido: ", attrs)
-        # Se for email, busca o usuário
-        if '@' in credentials['username']:
-            try:
-                user = User.objects.get(email=credentials['username'])
-                credentials['username'] = user.username
-            except User.DoesNotExist:
-                pass
-
-        return super().validate(credentials)
-"""        
+ 

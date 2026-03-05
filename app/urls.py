@@ -40,5 +40,6 @@ urlpatterns = [
     path('', include('dashboards.urls')),
     path('', include('examcategories.urls')),
     path('', include('invoices.urls')),
+    path('', include('trainings.urls')),
 ]
 

@@ -30,6 +30,7 @@ SGK - Cadastro de Karatecas
     <table class="table table-striped table-bordered">
         <thead class="thead-dark">
             <tr>
+                <th>ID</th>
                 <th>Nome</th>
                 <th>Sexo</th>
                 <th>CPF</th>
@@ -45,6 +46,7 @@ SGK - Cadastro de Karatecas
         <tbody>
             {% for karateca in karatecas %}
                 <tr>
+                    <td> {{ karateca.id }} </td>
                     <td> {{ karateca.name }} </td>
                     <td> {{ karateca.genre }} </td>
                     <td> {{ karateca.cpf }} </td>

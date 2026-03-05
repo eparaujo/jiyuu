@@ -23,22 +23,13 @@ STATUS_EXAM = [
 class Exam(models.Model):
     """Exame de faixa em uma data específica"""
 
-    dojo = models.ForeignKey(
-        Dojo,
-        on_delete=models.CASCADE,
-        related_name="exams"
-    )
+    dojo = models.ForeignKey(Dojo, on_delete=models.CASCADE, related_name="exams")
     date = models.DateField()
     description = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=60, choices=STATUS_EXAM, blank=True, null=True)
 
     # 🔹 Categorias de graduação que fazem parte deste exame
-    categories = models.ManyToManyField(
-        ExamCategory,
-        related_name="exams",
-        blank=True,
-        help_text="Categorias de graduação que fazem parte do exame (ex: Branca -> Azul)"
-    )
+    categories = models.ManyToManyField(ExamCategory, related_name="exams", blank=True, help_text="Categorias de graduação que fazem parte do exame (ex: Branca -> Azul)" )
 
     # 🔹 Participantes (via tabela intermediária) 
     participants = models.ManyToManyField(

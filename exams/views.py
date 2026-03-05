@@ -10,16 +10,25 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from . import models, forms
 from rest_framework import generics
 from . import serializers
-from .serializers import ExamResultSerializer, ExamRequirementWithResultSerializer, ExamEnrollmentSerializer, ExamSerializer, ExamEnrollmentSerializer
+from .serializers import ExamResultSerializer, ExamRequirementWithResultSerializer, ExamEnrollmentSerializer, ExamSerializer, ExamEnrollmentSerializer, ExamDetailReadSerializer
 from rest_framework.views import APIView
-from .models import ExamEnrollment, Exam
+from .models import ExamEnrollment, Exam, ExamCategory, ExamRequirement, ExamResult
 from examcategories.models import ExamCategory
 from senseis.models import Sensei
 from django.shortcuts import get_object_or_404
 from exams.permissions import IsOwnerOrExaminer
 from rest_framework.permissions import IsAuthenticated
 from collections import OrderedDict
-
+from rest_framework.generics import RetrieveAPIView
+from .permissions import IsExamStudent
+from rest_framework.exceptions import NotFound
+from dojos.models import DojoMembership
+from trainings.services import can_do_exam
+from django.contrib import messages
+from .forms import ExamEnrollmentForm
+from django.core.exceptions import ValidationError
+from django.utils.timezone import now
+from datetime import timedelta
 
 
 # -------------------------------
@@ -49,6 +58,45 @@ class ExamCreateView(LoginRequiredMixin, CreateView):
 class ExamDetailView(LoginRequiredMixin, DetailView):
     model = models.Exam
     template_name = "exam_detail.html"
+
+    def get_queryset(self):
+        """
+        Otimiza o carregamento do exame e seus relacionamentos
+        para evitar múltiplas queries no template.
+        """
+        return (
+            super()
+            .get_queryset()
+            .select_related("dojo")
+            .prefetch_related(
+                "categories",
+                "requirements__subject",
+                "requirements__category",
+                "enrollments__karateca",
+                "enrollments__current_graduation",
+                "enrollments__category",
+            )
+        )
+
+    def get_context_data(self, **kwargs):
+        """
+        Contexto adicional preparado para futuras etapas
+        (ex: verificação de elegibilidade para o exame).
+        """
+        context = super().get_context_data(**kwargs)
+
+        exam = self.object
+
+        # 🔹 Inscrições já existentes (organizadas por categoria no template)
+        context["enrollments"] = exam.enrollments.all()
+
+        # 🔹 Requisitos do exame
+        context["requirements"] = exam.requirements.all()
+
+        # 🔹 Categorias do exame
+        context["categories"] = exam.categories.all()
+
+        return context
 
 
 class ExamUpdateView(LoginRequiredMixin, UpdateView):
@@ -157,7 +205,7 @@ class ExamRequirementListView(LoginRequiredMixin, ListView):
     template_name = "requirement_list.html"
     context_object_name = "requirements"
     paginate_by = 10
-
+    
     def get_queryset(self):
         queryset = super().get_queryset()
         subject = self.request.GET.get("subject")
@@ -192,28 +240,82 @@ class ExamRequirementDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # -------------------------------
-# EXAM ENROLLMENT
+# EXAM ENROLLMENT LIST VIEW
 # -------------------------------
 class ExamEnrollmentListView(LoginRequiredMixin, ListView):
-    model = models.ExamEnrollment
+    model = ExamEnrollment
     template_name = "enrollment_list.html"
     context_object_name = "enrollments"
-    paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        self.exam = get_object_or_404(Exam, pk=self.kwargs["exam_id"])
+        queryset = ExamEnrollment.objects.filter(exam=self.exam)
+
         karateca = self.request.GET.get("karateca")
         if karateca:
             queryset = queryset.filter(karateca__name__icontains=karateca)
-        return queryset
 
+        return queryset.select_related(
+            "karateca", "current_graduation", "category"
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["exam"] = self.exam
+        return context
 
 class ExamEnrollmentCreateView(LoginRequiredMixin, CreateView):
-    model = models.ExamEnrollment
+    model = ExamEnrollment
     template_name = "enrollment_create.html"
-    form_class = forms.ExamEnrollmentForm
-    success_url = reverse_lazy("enrollment_list")
+    form_class = ExamEnrollmentForm
+    success_url = reverse_lazy("exam_list")
 
+    def get_form_kwargs(self):
+        """
+        Injeta o exame no form para GET e POST
+        """
+        kwargs = super().get_form_kwargs()
+        exam_id = self.kwargs.get("exam_id")
+
+        self.exam = models.Exam.objects.select_related("dojo").get(pk=exam_id)
+        kwargs["exam"] = self.exam
+
+        return kwargs
+
+    def form_valid(self, form):
+        """
+        Validação central de negócio:
+        impede inscrição se karateca estiver em carência
+        """
+
+        # 🔒 GARANTE o vínculo correto
+        form.instance.exam = self.exam
+
+        karateca = form.cleaned_data.get("karateca")
+
+        # 🔒 REGRA DE NEGÓCIO (ETAPA 7)
+        can_exam, reason = can_do_exam(karateca)
+        if not can_exam:
+            messages.error(self.request, reason)
+            return self.form_invalid(form)
+
+        # Evita inscrição duplicada
+        if ExamEnrollment.objects.filter(
+            exam=self.exam,
+            karateca=karateca
+        ).exists():
+            messages.warning(
+                self.request,
+                "Este karateca já está inscrito neste exame."
+            )
+            return self.form_invalid(form)
+
+        messages.success(
+            self.request,
+            "Karateca inscrito com sucesso no exame."
+        )
+        return super().form_valid(form)
+    
 
 class ExamEnrollmentDetailView(LoginRequiredMixin, DetailView):
     model = models.ExamEnrollment
@@ -401,3 +503,126 @@ class ExamParticipantsByCategoryAPIView(generics.ListAPIView):
         print("Nome dos karatecas encontrados; ", queryset)
         return queryset
 
+
+#--------------------------------------
+# Último resultado do exame do aluno
+#-------------------------------------
+
+
+class LastExamResultView(APIView):
+    permission_classes = [IsAuthenticated]
+
+
+    def get(self, request):
+        karateca = request.user.karateka
+
+        enrollment = (
+            ExamEnrollment.objects
+            .filter(
+                karateca=karateca,
+                exam__status="FINALIZADO"
+            )
+            .select_related("exam")
+            .order_by("-exam__date")
+            .first()
+        )
+
+        if not enrollment:
+            return Response({"detail": "Nenhum exame encontrado."})
+
+        results = ExamResult.objects.filter(enrollment=enrollment)
+
+        return Response({
+            "exam_id": enrollment.exam.id,
+            "exam_date": enrollment.exam.date,
+            "subjects": [
+                {
+                    "name": r.subject.name,
+                    "score": r.score
+                } for r in results
+            ]
+        })
+
+#------------------------------------------------
+# Detalhes do último resultado do exame do aluno
+#------------------------------------------------
+class LastExamResultDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    print("Entrando no resultado do exame")
+
+    def get(self, request):
+        karateca = request.user.karateca
+
+        enrollment = (
+            ExamEnrollment.objects
+            .filter(
+                karateca=karateca,
+                exam__status="FINALIZADO"
+            )
+            .select_related("exam", "category")
+            .order_by("-exam__date")
+            .first()
+        )
+
+        if not enrollment:
+            return Response({"detail": "Nenhum exame encontrado."})
+
+        results = ExamResult.objects.filter(enrollment=enrollment)
+
+        return Response({
+            "exam": {
+                "date": enrollment.exam.date,
+                "category": enrollment.category.name if enrollment.category else None
+            },
+            "subjects": [
+                {
+                    "name": r.subject.name,
+                    "score": r.score,
+                    "comments": r.comments
+                } for r in results
+            ]
+        })
+
+
+# ------------------------------------------------
+# Detalhes do exame - leitura para ALUNO (APP)
+# ------------------------------------------------
+class NextExamAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        membership = (
+            DojoMembership.objects
+            .select_related("dojo")
+            .filter(user=user)
+            .first()
+        )
+
+        if not membership:
+            return Response(
+                {"detail": "Usuário sem vínculo com dojo"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        dojo = membership.dojo
+
+        exam = (
+            Exam.objects
+            .filter(
+                dojo=dojo,
+                status='CONFIRMADO'
+            )
+            .first()
+        )
+
+        if not exam:
+            return Response(
+                {"detail": "Nenhum exame ativo"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = ExamDetailReadSerializer(exam)
+        return Response(serializer.data)

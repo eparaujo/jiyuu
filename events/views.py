@@ -9,6 +9,7 @@ from events.models import Event
 from .forms import EventForm
 from .serializers import EventSerializer, CourseEnrollmentSerializer
 from karatecas.models import Karateca
+from rest_framework.generics import RetrieveAPIView
 
 
 # ------------------------------ HTML Views ------------------------------
@@ -116,3 +117,8 @@ class EventListAPI(generics.ListAPIView):
 class CourseEnrollmentCreateAPI(generics.CreateAPIView):
     queryset = CourseEnrollment.objects.all()
     serializer_class = CourseEnrollmentSerializer
+
+
+class EventDetailAPI(RetrieveAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
