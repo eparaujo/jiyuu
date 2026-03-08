@@ -134,11 +134,26 @@ class DojoMemberListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         dojo_id = self.kwargs["dojo_id"]
 
+        # 🔓 superuser pode acessar qualquer dojo
+        if self.request.user.is_superuser:
+            return DojoMembership.objects.filter(
+                dojo_id=dojo_id,
+                is_active=True
+            )
+
         # 🔒 só quem pertence ao dojo pode acessar
-        DojoMembership.objects.get(
+        membership = DojoMembership.objects.filter(
             user=self.request.user,
-            dojo_id=dojo_id
-        )
+            dojo_id=dojo_id,
+            is_active=True
+        ).first()
+
+        if not membership:
+            messages.warning(
+                self.request,
+                "Você não possui acesso aos membros deste dojo."
+            )
+            return DojoMembership.objects.none()
 
         return DojoMembership.objects.filter(
             dojo_id=dojo_id,
@@ -149,20 +164,25 @@ class DojoMemberListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         dojo_id = self.kwargs["dojo_id"]
-
-        membership = DojoMembership.objects.get(
-            user=self.request.user,
-            dojo_id=dojo_id
-        )
-
         dojo = get_object_or_404(Dojo, id=dojo_id)
 
-        context["requester_role"] = membership.role
+        # 🔓 superuser assume papel OWNER para interface
+        if self.request.user.is_superuser:
+            context["requester_role"] = "OWNER"
+        else:
+            membership = DojoMembership.objects.filter(
+                user=self.request.user,
+                dojo_id=dojo_id,
+                is_active=True
+            ).first()
+
+            context["requester_role"] = membership.role if membership else None
+
         context["dojo_id"] = dojo_id
         context["dojo"] = dojo  # ← necessário para {% url ... dojo.id %}
 
-        return context    
- 
+        return context
+         
 class DojoMemberRoleUpdateView(generics.UpdateAPIView):
     queryset = DojoMembership.objects.all()
     serializer_class = DojoMemberRoleUpdateSerializer
