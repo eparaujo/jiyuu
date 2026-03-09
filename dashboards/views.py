@@ -45,40 +45,61 @@ class DashboardAPIView(APIView):
         membership = (
             DojoMembership.objects
             .select_related("dojo")
-            .filter(user=user)
+            .filter(user=user, is_active=True)
             .first()
         )
 
+        # 🔹 Usuário recém criado ainda não tem dojo
         if not membership:
             return Response(
-                {"detail": "Usuário sem vínculo com dojo"},
-                status=status.HTTP_403_FORBIDDEN,
+                {
+                    "dojoName": None,
+                    "sensei_name": None,
+                    "active_students": 0,
+                    "last_exam_date": None,
+                    "last_exam_participants": 0,
+                    "last_exam_approved": 0,
+                    "last_exam_students": [],
+                    "next_exam_date": None,
+                    "next_exam_registered": 0,
+                    "next_exam_students": [],
+                    "next_exam_name": None,
+                    "next_exam_id": None,
+                    "upcoming_events": [],
+                },
+                status=status.HTTP_200_OK,
             )
 
         dojo = membership.dojo
         role = membership.role
 
-        # 🔹 Seleciona dashboard conforme papel
-        if role in ["OWNER", "ADMIN"]:
-            dashboard = (
-                Dashboard.objects
-                .select_related("dojo")
-                .filter(dojo=dojo)
-                .first()
-            )
-        else:
-            # STUDENT (ou qualquer outro papel)
-            dashboard = (
-                Dashboard.objects
-                .select_related("dojo")
-                .filter(dojo=dojo)
-                .first()
-            )
+        # 🔹 Busca dashboard do dojo
+        dashboard = (
+            Dashboard.objects
+            .select_related("dojo")
+            .filter(dojo=dojo)
+            .first()
+        )
 
+        # 🔹 Banco vazio ou dojo recém criado
         if not dashboard:
             return Response(
-                {"detail": "Dashboard não encontrado"},
-                status=status.HTTP_404_NOT_FOUND,
+                {
+                    "dojoName": dojo.tradename or dojo.razaosocial,
+                    "sensei_name": user.get_full_name() or user.username,
+                    "active_students": 0,
+                    "last_exam_date": None,
+                    "last_exam_participants": 0,
+                    "last_exam_approved": 0,
+                    "last_exam_students": [],
+                    "next_exam_date": None,
+                    "next_exam_registered": 0,
+                    "next_exam_students": [],
+                    "next_exam_name": None,
+                    "next_exam_id": None,
+                    "upcoming_events": [],
+                },
+                status=status.HTTP_200_OK,
             )
 
         serializer = DashboardSerializer(

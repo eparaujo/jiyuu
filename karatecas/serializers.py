@@ -4,7 +4,7 @@ from django.db import transaction, IntegrityError
 from karatecas.models import Karateca
 from dojos.models import DojoMembership
 from dojos.choices import DojoRole
-
+from dashboards.models import Dashboard
 
 
 
@@ -79,6 +79,16 @@ class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
                 user=user,
                 dojo=dojo,
                 role=DojoRole.STUDENT            
+            )
+            # 🔹 GARANTE EXISTÊNCIA DO DASHBOARD DO DOJO
+            Dashboard.objects.get_or_create(
+                dojo=dojo,
+                defaults={
+                    "active_students": 0,
+                    "last_exam_participants": 0,
+                    "last_exam_approved": 0,
+                    "next_exam_registered": 0,
+                }
             )
 
             return karateka
