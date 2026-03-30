@@ -12,6 +12,13 @@ class ExamCategory(models.Model):
         max_length=100,
         help_text="Descrição curta (ex: Branca para Amarela)"
     )
+    to_graduation = models.ForeignKey(
+    Graduation,
+    on_delete=models.PROTECT,
+    related_name="exam_target_categories",
+    null=True,
+    blank=True
+)
 
     def __str__(self):
         return self.name_category

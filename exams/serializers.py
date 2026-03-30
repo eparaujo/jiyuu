@@ -129,6 +129,34 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+        # 🔹 Atualiza aprovação e graduação
+        requirements = instance.exam.requirements.all()
+
+        approved = True
+        for req in requirements:
+            result = ExamResult.objects.filter(
+                enrollment=instance,
+                subject=req.subject
+            ).first()
+
+            score = result.score if result else 0
+
+            if score < req.min_score:
+                approved = False
+                break
+
+        instance.approved = approved
+        instance.save()
+
+        # 🔹 SE aprovado → atualiza graduação
+        if approved and instance.category and instance.category.to_graduation:
+            karateca = instance.karateca
+
+            # evita update desnecessário
+            if karateca.graduation != instance.category.to_graduation:
+                karateca.graduation = instance.category.to_graduation
+                karateca.save()
+
 
 class ExamCategorySerializer(serializers.ModelSerializer):
     class Meta:

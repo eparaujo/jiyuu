@@ -417,6 +417,40 @@ class ExamResultCreateView(LoginRequiredMixin, CreateView):
     form_class = forms.ExamResultForm
     success_url = reverse_lazy("result_list")
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        enrollment_id = self.request.GET.get("enrollment")
+
+        if enrollment_id:
+            try:
+                enrollment = models.ExamEnrollment.objects.select_related("exam__dojo").get(id=enrollment_id)
+
+                # 🔹 injeta instance já com enrollment (EVITA ERRO)
+                kwargs["instance"] = models.ExamResult(enrollment=enrollment)
+
+            except models.ExamEnrollment.DoesNotExist:
+                pass
+
+        return kwargs
+
+    def get_initial(self):
+        initial = super().get_initial()
+        enrollment_id = self.request.GET.get("enrollment")
+
+        if enrollment_id:
+            initial["enrollment"] = enrollment_id
+
+        return initial
+
+    def form_valid(self, form):
+        enrollment_id = self.request.GET.get("enrollment")
+
+        if enrollment_id:
+            form.instance.enrollment_id = enrollment_id
+
+        return super().form_valid(form)
+
 
 class ExamResultDetailView(LoginRequiredMixin, DetailView):
     model = models.ExamResult

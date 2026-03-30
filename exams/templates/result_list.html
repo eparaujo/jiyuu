@@ -1,8 +1,25 @@
 {% extends 'base.html' %}
 {% block title %}SGK - Resultados do Exame{% endblock %}
+
 {% block content %}
 
 <div class="row mb-3">
+  <div class="col-md-6">
+    <!-- 🔎 Pesquisa -->
+    <form method="get" class="d-flex">
+      <input 
+        type="text" 
+        name="q" 
+        class="form-control me-2" 
+        placeholder="Pesquisar por nome..."
+        value="{{ request.GET.q }}"
+      >
+      <button type="submit" class="btn btn-outline-secondary">
+        <i class="bi bi-search"></i>
+      </button>
+    </form>
+  </div>
+
   <div class="col-md-6">
     <a href="{% url 'result_create' %}" class="btn btn-success float-end">
       <i class="bi bi-plus"></i> Novo Resultado
@@ -10,56 +27,67 @@
   </div>
 </div>
 
-<div class="table-responsive">
-  <table class="table table-bordered align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th style="width: 80%;">Karateca</th>
-        <th style="width: 20%;">Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% regroup results by enrollment.karateca as karateca_list %}
+{% regroup results by enrollment.karateca as karateca_list %}
 
-      {% for group in karateca_list %}
-        <tr>
-          <!-- Coluna Karateca -->
-          <td>
-            <strong>👤 {{ group.grouper }}</strong>
-            <ul class="list-unstyled mt-2 mb-0">
-              {% for result in group.list %}
-                <li>
-                  - {{ result.subject.name }} | Nota: {{ result.score }} | 
-                  Comentário: {{ result.comments|default:"Sem comentários" }} 
-                  {% if result.sensei_examiner %}
-                    - Examinador: {{ result.sensei_examiner }}
-                  {% endif %}
+{% for group in karateca_list %}
+  <div class="card mb-3 shadow-sm">
 
-                </li>
-              {% endfor %}
-            </ul>
-          </td>
+    <!-- 🔹 Header do Karateca -->
+    <div class="card-header bg-dark text-white">
+      👤 {{ group.grouper }}
+    </div>
 
-          <!-- Coluna Ações -->
-          <td class="text-center">
-            {% for result in group.list %}
-              <div class="mb-1">
+    <!-- 🔹 Tabela de matérias -->
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Matéria</th>
+            <th style="width: 100px;">Nota</th>
+            <th>Comentário</th>
+            <th>Examinador</th>
+            <th style="width: 120px;" class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in group.list %}
+            <tr>
+              <td>{{ result.subject.name }}</td>
+
+              <td>
+                <strong>{{ result.score }}</strong>
+              </td>
+
+              <td>
+                {{ result.comments|default:"Sem comentários" }}
+              </td>
+
+              <td>
+                {{ result.sensei_examiner|default:"-" }}
+              </td>
+
+              <td class="text-center">
                 <a href="{% url 'result_detail' result.id %}" class="btn btn-sm btn-info">
                   <i class="bi bi-eye"></i>
                 </a>
                 <a href="{% url 'result_update' result.id %}" class="btn btn-sm btn-warning">
                   <i class="bi bi-pencil"></i>
                 </a>
-              </div>
-            {% endfor %}
-          </td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="2">Nenhum resultado encontrado.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+{% empty %}
+  <div class="alert alert-warning">
+    Nenhum resultado encontrado.
+  </div>
+{% endfor %}
 
 {% include 'components/_pagination.html' %}
+
 {% endblock %}
