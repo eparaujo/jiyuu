@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 class OutflowListView(LoginRequiredMixin, ListView):
     model = models.Outflow
-    template_name = 'Outflow_list.html'
+    template_name = 'outflow_list.html'
     context_object_name ='outflows'
     paginate_by = 10
 
