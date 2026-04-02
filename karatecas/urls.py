@@ -12,4 +12,5 @@ urlpatterns = [
     path('api/v1/karatecas/<int:pk>/', views.KaratecaRetrieveUpdateDestroyAPIView.as_view(), name='karateca_retrieve_update_api_view'),
     path('api/v1/register/', views.PublicKaratekaRegisterView.as_view(), name='public_karateca_register'),
     path("api/v1/karatecas/me/graduation-status/", views.KaratecaGraduationStatusAPIView.as_view(), name="karateca_graduation_status"),
+    path("karatecas/<int:pk>/set-password/", views.set_karateca_password, name="karateca_set_password"),#resetar/gravar password do aluno
 ] 

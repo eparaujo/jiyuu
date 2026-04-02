@@ -33,3 +33,24 @@ class KaratecaForm(forms.ModelForm):
             'monthly_fee': 'Valor da Mensalidade',
             'due_day': 'Data de Vencimento',
         }
+
+
+class SetPasswordForm(forms.Form):
+    password = forms.CharField(
+        label="Senha",
+        widget=forms.PasswordInput
+    )
+    confirm_password = forms.CharField(
+        label="Confirmar Senha",
+        widget=forms.PasswordInput
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm = cleaned_data.get("confirm_password")
+
+        if password != confirm:
+            raise forms.ValidationError("As senhas não coincidem.")
+
+        return cleaned_data

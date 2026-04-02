@@ -13,6 +13,11 @@ from rest_framework.permissions import IsAuthenticated
 from datetime import date
 from graduations.models import Graduation
 #from serializers import GraduationStatusSerializer
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from .models import Karateca
+from .forms import SetPasswordForm
+
 
 
 class KaratecaListView(LoginRequiredMixin, ListView):
@@ -114,3 +119,31 @@ class KaratecaGraduationStatusAPIView(APIView):
 
         serializer = GraduationStatusSerializer(data)
         return Response(serializer.data)
+    
+#View para gravar senha
+def set_karateca_password(request, pk):
+    karateca = get_object_or_404(Karateca, pk=pk)
+
+    if not karateca.user:
+        messages.error(request, "Karateca não possui usuário vinculado.")
+        return redirect("karateca_list")
+
+    if request.method == "POST":
+        form = SetPasswordForm(request.POST)
+
+        if form.is_valid():
+            password = form.cleaned_data["password"]
+
+            user = karateca.user
+            user.set_password(password)  # 🔐 CRÍTICO
+            user.save()
+
+            messages.success(request, "Senha definida com sucesso!")
+            return redirect("karateca_list")
+    else:
+        form = SetPasswordForm()
+
+    return render(request, "set_password.html", {
+        "form": form,
+        "karateca": karateca
+    })
