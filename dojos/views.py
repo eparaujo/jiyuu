@@ -133,32 +133,42 @@ class DojoMemberListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         dojo_id = self.kwargs["dojo_id"]
+        name = self.request.GET.get("name")
 
         # 🔓 superuser pode acessar qualquer dojo
         if self.request.user.is_superuser:
-            return DojoMembership.objects.filter(
+            queryset = DojoMembership.objects.filter(
                 dojo_id=dojo_id,
                 is_active=True
             )
 
-        # 🔒 só quem pertence ao dojo pode acessar
-        membership = DojoMembership.objects.filter(
-            user=self.request.user,
-            dojo_id=dojo_id,
-            is_active=True
-        ).first()
+        else:
+            # 🔒 só quem pertence ao dojo pode acessar
+            membership = DojoMembership.objects.filter(
+                user=self.request.user,
+                dojo_id=dojo_id,
+                is_active=True
+            ).first()
 
-        if not membership:
-            messages.warning(
-                self.request,
-                "Você não possui acesso aos membros deste dojo."
+            if not membership:
+                messages.warning(
+                    self.request,
+                    "Você não possui acesso aos membros deste dojo."
+                )
+                return DojoMembership.objects.none()
+
+            queryset = DojoMembership.objects.filter(
+                dojo_id=dojo_id,
+                is_active=True
             )
-            return DojoMembership.objects.none()
 
-        return DojoMembership.objects.filter(
-            dojo_id=dojo_id,
-            is_active=True
-        )
+        # 🔍 FILTRO POR PRIMEIRO NOME
+        if name:
+            queryset = queryset.filter(
+                user__first_name__icontains=name
+            )
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -181,7 +191,7 @@ class DojoMemberListView(LoginRequiredMixin, ListView):
         context["dojo_id"] = dojo_id
         context["dojo"] = dojo  # ← necessário para {% url ... dojo.id %}
 
-        return context
+        return context 
          
 class DojoMemberRoleUpdateView(generics.UpdateAPIView):
     queryset = DojoMembership.objects.all()

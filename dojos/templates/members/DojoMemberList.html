@@ -4,6 +4,22 @@
 <div class="container mt-4">
     <h3 class="display-6">Alunos/Atletas do Dojo</h3>
 
+    <form method="get" class="row mb-3">
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="text"
+                    name="name"
+                    class="form-control"
+                    placeholder="Pesquisar karateca..."
+                    value="{{ request.GET.name }}">
+                
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+
     {% if requester_role == "OWNER" %}
         <a href="{% url 'dojo_member_inactive_list' dojo.id %}"
             class="btn btn-primary mb-3">

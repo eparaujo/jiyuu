@@ -5,3 +5,4 @@ class DojoRole(models.TextChoices):
     ADMIN = 'ADMIN', 'Administrador'
     EXAMINER = "EXAMINER", "Examinador"
     STUDENT = 'STUDENT', 'Aluno'
+    SENSEI = 'SENSEI', 'Sensei' 

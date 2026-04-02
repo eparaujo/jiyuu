@@ -89,13 +89,20 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
 
     def get_approved(self, obj):
         requirements = obj.exam.requirements.all()
+
+        if not requirements.exists():
+            return False
+
         for req in requirements:
             result = ExamResult.objects.filter(
                 enrollment=obj,
                 subject=req.subject
             ).first()
-            score = result.score if result else 0
-            if score < req.min_score:
+            
+            if not result:
+                return False
+            
+            if result.score < req.min_score:
                 return False
         return True
 
