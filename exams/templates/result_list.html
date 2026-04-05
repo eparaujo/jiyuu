@@ -6,16 +6,16 @@
 <div class="row mb-3">
   <div class="col-md-6">
     <!-- 🔎 Pesquisa -->
-    <form method="get" class="d-flex">
+    <form method="get" class="d-flex mb-3">
       <input 
         type="text" 
         name="q" 
         class="form-control me-2" 
-        placeholder="Pesquisar por nome..."
-        value="{{ request.GET.q }}"
+        placeholder="Pesquisar karateca..."
+        value="{{ request.GET.q|default:'' }}"
       >
-      <button type="submit" class="btn btn-outline-secondary">
-        <i class="bi bi-search"></i>
+      <button type="submit" class="btn btn-primary">
+        Buscar
       </button>
     </form>
   </div>

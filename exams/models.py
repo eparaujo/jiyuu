@@ -72,8 +72,8 @@ class ExamRequirement(models.Model):
         null=True
     )
     subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE)
-    max_score = models.PositiveIntegerField(default=0)
-    min_score = models.PositiveIntegerField(default=0)
+    max_score = models.DecimalField(max_digits=5, decimal_places=2)
+    min_score = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
         return f"{self.exam} - {self.subject}"
@@ -108,7 +108,7 @@ class ExamResult(models.Model):
         related_name="results"
     )
     subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE)
-    score = models.PositiveIntegerField()
+    score = models.DecimalField(max_digits=5, decimal_places=2)
     comments = models.TextField(max_length=250, blank=True, null=True)
     sensei_examiner = models.CharField(max_length=250, blank=True, null=True)
 

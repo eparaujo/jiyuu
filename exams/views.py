@@ -29,6 +29,7 @@ from .forms import ExamEnrollmentForm
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 from datetime import timedelta
+from django.db.models import Q
 
 
 # -------------------------------
@@ -385,10 +386,17 @@ class ExamResultListView(LoginRequiredMixin, ListView):
             .order_by("enrollment__karateca__name", "subject__name")
         )
 
-        # filtro opcional por nome da matéria
+        # 🔹 filtro opcional por nome da matéria (já existente)
         subject = self.request.GET.get("subject")
         if subject:
             queryset = queryset.filter(subject__name__icontains=subject)
+
+        # 🔹 NOVO: filtro por nome do karateca (campo q)
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            queryset = queryset.filter(
+                Q(enrollment__karateca__name__icontains=q)
+            )
 
         return queryset
 
