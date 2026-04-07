@@ -21,7 +21,10 @@ class ExamForm(forms.ModelForm):
         fields = ["dojo", "date", "description", "status", "categories"]
         widgets = {
             "dojo": forms.Select(attrs={"class": "form-control"}),
-            "date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "date": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"class": "form-control", "type": "date"}
+            ),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "status": forms.Select(attrs={"class": "form-control"}),
             "categories": forms.SelectMultiple(attrs={"class": "form-control"}),
