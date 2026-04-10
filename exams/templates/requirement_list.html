@@ -20,7 +20,8 @@
     <thead class="thead-dark">
       <tr>
         <th>ID</th>
-        <th>Exame</th>
+        <th>Exame</th> 
+        <th>Categoria</th> 
         <th>Matéria</th>
         <th>Mín</th>
         <th>Máx</th>
@@ -33,6 +34,7 @@
         <td>{{ requirement.id }}</td>
         <td>{{ requirement.exam.date|date:"d/m/Y" }} - {{ requirement.exam.dojo.tradename|default:requirement.exam.dojo }}</td>
         <td>{{ requirement.subject.name }}</td>
+        <td>{{ requirement.category }}</td>
         <td>{{ requirement.min_score }}</td>
         <td>{{ requirement.max_score }}</td>
         <td>

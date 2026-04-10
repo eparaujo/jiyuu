@@ -80,7 +80,9 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         ]
 
     def get_subjects(self, obj):
-        requirements = obj.exam.requirements.all()
+        requirements = obj.exam.requirements.filter(
+            category=obj.category
+        )
         return ExamRequirementWithResultSerializer(
             requirements,
             many=True,
@@ -88,7 +90,9 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         ).data
 
     def get_approved(self, obj):
-        requirements = obj.exam.requirements.all()
+        requirements = obj.exam.requirements.filter(
+            category=obj.category
+        )
 
         if not requirements.exists():
             return False
@@ -104,6 +108,7 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
             
             if result.score < req.min_score:
                 return False
+
         return True
 
     def update(self, instance, validated_data):
@@ -137,7 +142,9 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         return instance
 
         # 🔹 Atualiza aprovação e graduação
-        requirements = instance.exam.requirements.all()
+        requirements = instance.exam.requirements.filter(
+            category=instance.category
+        )
 
         approved = True
         for req in requirements:
@@ -305,6 +312,10 @@ class ExamCategoryDetailSerializer(serializers.ModelSerializer):
     # ✅ CORREÇÃO AQUI (única alteração)
     def get_subjects(self, obj):
         exam = self.context.get("exam")
+
+        if not exam:
+            return []
+
         requirements = ExamRequirement.objects.filter(
             exam=exam,
             category=obj
@@ -312,9 +323,15 @@ class ExamCategoryDetailSerializer(serializers.ModelSerializer):
         return ExamRequirementReadSerializer(requirements, many=True).data
 
     def get_registrations(self, obj):
-        enrollments = ExamEnrollment.objects.filter(category=obj).select_related(
+        exam = self.context.get("exam")
+
+        enrollments = ExamEnrollment.objects.filter(
+            exam=exam,
+            category=obj
+        ).select_related(
             "karateca", "karateca__graduation"
         )
+
         return ExamParticipantReadSerializer(enrollments, many=True).data
 
 
@@ -328,6 +345,8 @@ class ExamDetailReadSerializer(serializers.ModelSerializer):
         read_only=True
     )
     categories = serializers.SerializerMethodField()
+
+    description = serializers.CharField(allow_null=True, required=False)
 
     class Meta:
         model = Exam

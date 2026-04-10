@@ -57,19 +57,19 @@ class ExamSubjectForm(forms.ModelForm):
 class ExamRequirementForm(forms.ModelForm):
     class Meta:
         model = models.ExamRequirement
-        fields = ["exam", "category","subject", "max_score", "min_score"]
+        fields = ["exam", "category","subject", "min_score", "max_score"]
         widgets = {
             "exam": forms.Select(attrs={"class": "form-control"}),
             "category": forms.Select(attrs={"class": "form-control"}),
             "subject": forms.Select(attrs={"class": "form-control"}),
-            "max_score": forms.NumberInput(attrs={"class": "form-control"}),
             "min_score": forms.NumberInput(attrs={"class": "form-control"}),
+            "max_score": forms.NumberInput(attrs={"class": "form-control"}),
         }
         labels = {
             "exam": "Exame",
-            "subject": "Matéria",
+            "subject": "Matéria",            
+            "min_score": "Nota Mínima",
             "max_score": "Nota Máxima",
-            "min_score": "Nota Mínima para Aprovação",
         }
 
 # -------------------------------
