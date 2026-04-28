@@ -7,6 +7,14 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.db.models import Sum
+from revenues.models import Revenue
+from django.db.models import Sum
+from datetime import datetime
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.db.models.deletion import ProtectedError
+from django.shortcuts import redirect
 
 
 class RevenueListView(LoginRequiredMixin, ListView):
@@ -52,3 +60,41 @@ class RevenueDeleteView(LoginRequiredMixin, DeleteView):
             messages.error(request,
                 "Não é possível excluir este registro, pois ele está sendo usado em outro lugar.")
             return redirect(self.success_url)
+        
+
+class FinancialDashboardAPIView(APIView):
+    def get(self, request):
+        now = datetime.now()
+        """
+        current_year = now.year
+        current_month = str(now.month).zfill(2)
+
+        # 🔹 RECEITAS
+        revenues = Revenue.objects.filter(
+            duedate__startswith=f"{current_year}-{current_month}"
+        ).exclude(
+            type__name__icontains="despesa"
+        )
+
+        # 🔹 DESPESAS
+        expenses = Revenue.objects.filter(
+            duedate__startswith=f"{current_year}-{current_month}",
+            type__name__icontains="despesa"
+        )"""
+
+        revenues = Revenue.objects.exclude(
+            type__name__icontains="despesa"
+        )
+
+        expenses = Revenue.objects.filter(
+            type__name__icontains="despesa"
+        )        
+
+        total_revenue = revenues.aggregate(total=Sum('value'))['total'] or 0
+        total_expenses = expenses.aggregate(total=Sum('value'))['total'] or 0
+
+        return Response({
+            "revenue": float(total_revenue),
+            "expenses": float(total_expenses),
+            "profit": float(total_revenue - total_expenses)
+        })

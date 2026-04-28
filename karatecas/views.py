@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from .models import Karateca
 from .forms import SetPasswordForm
+from django.db.models import Count
 
 
 
@@ -147,3 +148,23 @@ def set_karateca_password(request, pk):
         "form": form,
         "karateca": karateca
     })
+
+class StudentStatsAPIView(APIView):
+    def get(self, request):
+        stats = Karateca.objects.values('active').annotate(total=Count('id'))
+
+        result = {
+            "ATIVO": 0,
+            "AFASTADO": 0,
+            "LICENCIADO": 0,
+            "CANCELADO": 0,
+            "TOTAL": 0
+        }
+
+        for item in stats:
+            status = item['active']
+            total = item['total']
+            result[status] = total
+            result["TOTAL"] += total
+
+        return Response(result)
