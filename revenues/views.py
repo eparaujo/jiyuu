@@ -15,6 +15,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import redirect
+from app.metrics import get_revenue_metrics
+
 
 
 class RevenueListView(LoginRequiredMixin, ListView):
@@ -64,37 +66,23 @@ class RevenueDeleteView(LoginRequiredMixin, DeleteView):
 
 class FinancialDashboardAPIView(APIView):
     def get(self, request):
-        now = datetime.now()
-        """
-        current_year = now.year
-        current_month = str(now.month).zfill(2)
 
-        # 🔹 RECEITAS
-        revenues = Revenue.objects.filter(
-            duedate__startswith=f"{current_year}-{current_month}"
-        ).exclude(
-            type__name__icontains="despesa"
-        )
+        metrics = get_revenue_metrics()
 
-        # 🔹 DESPESAS
-        expenses = Revenue.objects.filter(
-            duedate__startswith=f"{current_year}-{current_month}",
-            type__name__icontains="despesa"
-        )"""
-
-        revenues = Revenue.objects.exclude(
-            type__name__icontains="despesa"
-        )
-
-        expenses = Revenue.objects.filter(
-            type__name__icontains="despesa"
-        )        
-
-        total_revenue = revenues.aggregate(total=Sum('value'))['total'] or 0
-        total_expenses = expenses.aggregate(total=Sum('value'))['total'] or 0
+        # 🔥 converter string formatada → float
+        def parse_money(value):
+            if not value:
+                return 0.0
+            return float(value.replace('.', '').replace(',', '.'))
 
         return Response({
-            "revenue": float(total_revenue),
-            "expenses": float(total_expenses),
-            "profit": float(total_revenue - total_expenses)
+            "revenue": parse_money(metrics["total_revenue"]),
+            "expenses": parse_money(metrics["total_expense"]),
+            "profit": parse_money(metrics["total_profit"]),
+
+            "breakdown": {
+                "mensalidades": parse_money(metrics["total_monthly_fee"]),
+                "eventos": parse_money(metrics["total_events"]),
+                "outros": 0.0  # 🔥 ainda não existe no metrics
+            }
         })
