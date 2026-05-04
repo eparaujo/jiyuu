@@ -57,8 +57,18 @@ class KaratecaDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('karateca_list')
 
 class KaratecaCreateListAPIView(generics.ListCreateAPIView):
-    queryset = models.Karateca.objects.all()
     serializer_class = serializers.KaratecaSerializer
+
+    def get_queryset(self):
+        queryset = models.Karateca.objects.select_related(
+                "graduation", "dojo", "genre").all()
+
+        status = self.request.query_params.get("status")
+
+        if status:
+                queryset = queryset.filter(active__iexact=status.strip())
+
+        return queryset.order_by("name")
 
 class KaratecaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = models.Karateca.objects.all()
@@ -70,7 +80,7 @@ class PublicKaratekaRegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-class KaratecaGraduationStatusAPIView(APIView):
+class KaratecaGraduationStatusAPIView(APIView): 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

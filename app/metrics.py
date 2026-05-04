@@ -79,7 +79,7 @@ def get_expense_data(): #esta função é usada para calcular e passar os dados 
     return dict(
         dates=dates,
         values=values,
-    )
+    ) 
 
 def get_revenues_data():
     today = timezone.now().date()

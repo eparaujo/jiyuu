@@ -9,9 +9,13 @@ from dashboards.models import Dashboard
 
 
 class KaratecaSerializer(serializers.ModelSerializer):
+    graduation = serializers.StringRelatedField()
+    dojo = serializers.StringRelatedField()
+    genre = serializers.StringRelatedField()
+
     class Meta:
         model = Karateca
-        fields = '__all__' 
+        fields = '__all__'  
 
 
 class GraduationStatusSerializer(serializers.Serializer):
