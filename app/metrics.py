@@ -8,6 +8,9 @@ from outflows.models import Outflow
 from django.utils.formats import number_format
 from django.utils import timezone
 from django.db.models import Sum, F
+from datetime import datetime
+from events.models import Event
+
 
 
 def get_karateca_metrics():
