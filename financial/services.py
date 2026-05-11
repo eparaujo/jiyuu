@@ -33,8 +33,8 @@ def get_financial_metrics(month=None, year=None):
 
     # 🔹 EVENTOS
     events = Event.objects.filter(
-        created_at__month=month,
-        created_at__year=year
+        date__month=month,
+        date__year=year
     )
 
     total_events = 0
