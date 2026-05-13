@@ -22,7 +22,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related('karateca', 'billing_cycle').prefetch_related('items')
+        qs = super().get_queryset().select_related('karateca','billing_cycle')
         # Substitua order_by('-issue_date') -> usar created_at ou billing_cycle
         qs = qs.order_by('-created_at')   # <-- CORREÇÃO principal
         # filtros opcionais
@@ -37,9 +37,33 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         return qs
 
     def get_context_data(self, **kwargs):
+
         ctx = super().get_context_data(**kwargs)
-        totals = Invoice.objects.aggregate(total_all=Sum('total_amount'))
+
+        totals = Invoice.objects.aggregate(
+            total_all=Sum('total_amount')
+        )
+
         ctx['total_amount'] = totals.get('total_all') or 0
+
+        # ciclo atual
+        today = date.today()
+
+        billing_cycle, _ = BillingCycle.objects.get_or_create(
+            month=today.month,
+            year=today.year,
+            defaults={
+                'start_date': date(today.year, today.month, 1),
+                'end_date': date(
+                    today.year,
+                    today.month,
+                    calendar.monthrange(today.year, today.month)[1]
+                ),
+            },
+        )
+
+        ctx['billing_cycle'] = billing_cycle
+
         return ctx
 
 
@@ -115,18 +139,39 @@ def generate_invoices_view(request):
 
     return redirect('invoice_list')
 
+
 @login_required
 def close_cycle_view(request):
+
     today = date.today()
-    cycle = BillingCycle.objects.filter(month=today.month, year=today.year).first()
+
+    cycle = BillingCycle.objects.filter(
+        month=today.month,
+        year=today.year
+    ).first()
+
     if not cycle:
-        messages.error(request, "❌ Nenhum ciclo encontrado para este mês.")
+        messages.error(
+            request,
+            "❌ Nenhum ciclo encontrado para este mês."
+        )
+        return redirect("invoice_list")
+
+    if cycle.closed:
+        messages.warning(
+            request,
+            "⚠️ Este ciclo já está fechado."
+        )
         return redirect("invoice_list")
 
     cycle.close_cycle()
-    messages.success(request, "🔒 Ciclo fechado com sucesso.")
-    return redirect("invoice_list")
 
+    messages.success(
+        request,
+        "🔒 Ciclo fechado com sucesso."
+    )
+
+    return redirect("invoice_list")
 
 @login_required
 def reset_cycle_view(request):
