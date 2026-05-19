@@ -35,7 +35,7 @@ class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Karateca
         fields = [
-            'name', 'cpf', 'email', 'celphone',
+            'name',  'birth_date', 'cpf', 'email', 'celphone',
             'genre', 'graduation', 'dan',
             'active', 'dojo', 'monthly_fee','due_day', 'password'
         ]
