@@ -21,4 +21,5 @@ urlpatterns = [
     path("dojos/<int:dojo_id>/members/inactive/", views.DojoMemberInactiveListView.as_view(), name="dojo_member_inactive_list"),
     path("dojos/members/<int:pk>/reactivate/", views.DojoMemberReactivateView.as_view(), name="dojo_member_reactivate"),
     path("dojos/members/<int:pk>/active/", views.DojoMemberActiveUpdateView.as_view() ),
+    path('api/v1/dojos/list/', views.DojoListAPIView.as_view(), name='dojo_list_api'),
 ] 

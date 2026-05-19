@@ -9,9 +9,11 @@ from rest_framework import generics, permissions
 from . import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from datetime import date
 from graduations.models import Graduation
+from genres.models import Genre
+from dojos.models import Dojo
 #from serializers import GraduationStatusSerializer
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages

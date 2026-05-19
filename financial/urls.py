@@ -7,4 +7,5 @@ urlpatterns = [
     #path('api/v1/dashboard/financial/details/', views.FinancialDetailsAPIView.as_view()),
     path('api/v1/financial/chart/', views.FinancialChartAPIView.as_view(), name='financial-chart'),
     path('api/v1/dashboard/financial/details/', views.FinancialDetailAPIView.as_view()),
+    path('api/v1/financial/delinquent-students/', views.DelinquentStudentsAPIView.as_view(), name='financial_delinquent_students'),
 ]

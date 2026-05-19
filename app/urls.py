@@ -42,5 +42,7 @@ urlpatterns = [
     path('', include('invoices.urls')),
     path('', include('trainings.urls')),
     path('', include('financial.urls')),
+    path('', include('genres.urls')),
+    
 ]
 

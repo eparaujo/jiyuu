@@ -9,7 +9,7 @@ from django.db.models import Sum
 from django.db.models.functions import ExtractDay
 from rest_framework.permissions import IsAuthenticated
 from decimal import Decimal
-from .serializers import FinancialDetailSerializer
+from .serializers import FinancialDetailSerializer, DelinquentStudentSerializer
 from calendar import monthrange
 from events.models import CourseEnrollment
 from datetime import date
@@ -406,3 +406,98 @@ class FinancialChartAPIView(APIView):
             "chart": chart,
             "items": items
         })
+    
+#-------------------------------------------
+#View que controla inadimplência
+#-------------------------------------------
+class DelinquentStudentsAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        today = date.today()
+
+        invoices = (
+            Invoice.objects
+            .filter(
+                paid=False,
+                due_date__lt=today
+            )
+            .select_related(
+                "karateca",
+                "karateca__dojo",
+                "karateca__graduation"
+            )
+            .prefetch_related("items")
+            .order_by("due_date")
+        )
+
+        result = []
+
+        for invoice in invoices:
+
+            overdue_days = (
+                today - invoice.due_date
+            ).days
+
+            items = []
+
+            for item in invoice.items.all():
+
+                item_type = item.item_type
+
+                if item_type == "MONTHLY":
+                    item_label = "Mensalidade"
+
+                elif item_type == "COURSE":
+                    item_label = "Curso"
+
+                elif item_type == "EVENT":
+                    item_label = "Exame/Evento"
+
+                else:
+                    item_label = "Outros"
+
+                items.append({
+                    "type": item_label,
+                    "description": item.description,
+                    "amount": float(item.amount),
+                    "due_date": item.due_date
+                })
+
+            result.append({
+
+                "karateca_id": invoice.karateca.id,
+
+                "name": invoice.karateca.name,
+
+                "dojo": (
+                    invoice.karateca.dojo.tradename
+                    if invoice.karateca.dojo
+                    else "-"
+                ),
+
+                "graduation": (
+                    invoice.karateca.graduation.name
+                    if invoice.karateca.graduation
+                    else "-"
+                ),
+
+                "invoice_id": invoice.id,
+
+                "total_amount": float(
+                    invoice.total_amount
+                ),
+
+                "overdue_days": overdue_days,
+
+                "items": items
+            })
+
+        serializer = DelinquentStudentSerializer(
+            result,
+            many=True
+        )
+
+        return Response(serializer.data)

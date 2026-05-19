@@ -7,6 +7,10 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from . import serializers
 from rest_framework import generics, permissions
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from genres.models import Genre
 
 
 
@@ -50,3 +54,19 @@ class GenreListAPI(generics.ListAPIView):
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     ermission_classes = [permissions.AllowAny]  # ✅ Permite acesso público
+
+class GenreListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        genres = Genre.objects.all()
+
+        data = [
+            {
+                "id": g.id,
+                "name": g.name
+            }
+            for g in genres
+        ]
+
+        return Response(data)

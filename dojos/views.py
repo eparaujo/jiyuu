@@ -21,6 +21,7 @@ from django.shortcuts import redirect, get_object_or_404
 from dojos.models import Dojo, DojoMembership
 from django.views import View
 from django.contrib import messages
+from rest_framework.permissions import AllowAny
 from django.http import HttpResponseForbidden
 
 
@@ -342,3 +343,20 @@ class DojoMemberReactivateView(LoginRequiredMixin, View):
             "dojo_member_inactive_list",
             dojo_id=membership.dojo.id
         )
+    
+
+class DojoListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        dojos = Dojo.objects.all()
+
+        data = [
+            {
+                "id": d.id,
+                "name": d.tradename
+            }
+            for d in dojos
+        ]
+
+        return Response(data)

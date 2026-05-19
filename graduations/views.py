@@ -7,6 +7,11 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from . import serializers
 from rest_framework import generics, permissions
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from graduations.models import Graduation
+from genres.models import Genre
 
 
 class GraduationListView(LoginRequiredMixin, ListView):
@@ -49,3 +54,36 @@ class GraduationListAPI(generics.ListAPIView):
     queryset = models.Graduation.objects.all()
     serializer_class = serializers.GraduationSerializer   
     ermission_classes = [permissions.AllowAny]  # ✅ Permite acesso público
+
+
+class GraduationListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        graduations = Graduation.objects.all().order_by('order')
+
+        data = [
+            {
+                "id": g.id,
+                "name": g.name
+            }
+            for g in graduations
+        ]
+
+        return Response(data)
+    
+class GenreListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        genres = Genre.objects.all()
+
+        data = [
+            {
+                "id": g.id,
+                "name": g.name 
+            }
+            for g in genres
+        ]
+
+        return Response(data)

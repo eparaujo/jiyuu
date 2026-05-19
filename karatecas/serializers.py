@@ -37,7 +37,7 @@ class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'cpf', 'email', 'celphone',
             'genre', 'graduation', 'dan',
-            'active', 'dojo', 'password'
+            'active', 'dojo', 'monthly_fee','due_day', 'password'
         ]
         extra_kwargs = {
             'active': {'read_only': True},
@@ -79,11 +79,11 @@ class PublicKaratekaRegisterSerializer(serializers.ModelSerializer):
             )
 
             # 🔴 REGRA DE NEGÓCIO CENTRAL
-            DojoMembership.objects.create(
-                user=user,
-                dojo=dojo,
-                role=DojoRole.STUDENT            
-            )
+            #DojoMembership.objects.create(
+            #    user=user,
+            #    dojo=dojo,
+            #    role=DojoRole.STUDENT            
+            #)
             # 🔹 GARANTE EXISTÊNCIA DO DASHBOARD DO DOJO
             Dashboard.objects.get_or_create(
                 dojo=dojo,

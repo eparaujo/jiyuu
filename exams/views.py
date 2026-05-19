@@ -621,6 +621,61 @@ class LastExamResultDetailView(APIView):
 
 
 # ------------------------------------------------
+# Próximo exame do dojo (APP)
+# ------------------------------------------------
+class NextExamAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        user = request.user
+
+        membership = (
+            DojoMembership.objects
+            .select_related("dojo")
+            .filter(user=user)
+            .first()
+        )
+
+        if not membership:
+            return Response(
+                {"detail": "Usuário sem vínculo com dojo"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        dojo = membership.dojo
+
+        today = now().date()
+
+        exam = (
+            Exam.objects
+            .filter(
+                dojo=dojo,
+                status__in=["AGENDADO", "CONFIRMADO"],
+                date__gte=today
+            )
+            .prefetch_related(
+                "categories",
+                "requirements__subject",
+                "enrollments__karateca",
+                "enrollments__category",
+            )
+            .order_by("date")
+            .first()
+        )
+
+        if not exam:
+            return Response(
+                {"detail": "Nenhum exame futuro encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = ExamDetailReadSerializer(exam)
+
+        return Response(serializer.data)
+
+"""
+# ------------------------------------------------
 # Detalhes do exame - leitura para ALUNO (APP)
 # ------------------------------------------------
 class NextExamAPIView(APIView):
@@ -661,3 +716,4 @@ class NextExamAPIView(APIView):
 
         serializer = ExamDetailReadSerializer(exam)
         return Response(serializer.data)
+"""
