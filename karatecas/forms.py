@@ -6,9 +6,10 @@ class KaratecaForm(forms.ModelForm):
 
     class Meta:
         model = models.Karateca
-        fields = ['name', 'genre', 'cpf', 'email', 'celphone', 'graduation', 'dan', 'dojo', 'active', 'monthly_fee', 'due_day']
+        fields = ['name', 'birth_date', 'genre', 'cpf', 'email', 'celphone', 'graduation', 'dan', 'dojo', 'active', 'monthly_fee', 'due_day']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'birth_date': forms.DateInput(attrs={'class': 'form-control','type': 'date' }),
             'genre': forms.Select(attrs={'class': 'form-control'}),
             'cpf': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.TextInput(attrs={'class': 'form-control'}),
@@ -22,6 +23,7 @@ class KaratecaForm(forms.ModelForm):
         }
         labels = {
             'name': 'Nome',
+            'birth_date': 'Data de nascimento',
             'genre': 'Sexo',
             'cpf': 'Número do CPF',
             'email': 'Endereço de E-mail',

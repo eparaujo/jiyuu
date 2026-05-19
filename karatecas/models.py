@@ -5,6 +5,7 @@ from dojos.models import Dojo
 from genres.models import Genre
 from revenues.models import Revenue
 from kindrevenues.models import KindRevenue
+from datetime import date
 
 
 class Karateca(models.Model):
@@ -25,6 +26,7 @@ class Karateca(models.Model):
 
     # 🔹 Dados principais
     name = models.CharField(max_length=200)
+    birth_date = models.DateField(null=True, blank=True)
     genre = models.ForeignKey(Genre, on_delete=models.PROTECT, related_name='karatekas')
     cpf = models.CharField(max_length=30, blank=True, null=True)
     email = models.EmailField(unique=True)
@@ -69,3 +71,19 @@ class Karateca(models.Model):
             )
             self.user = user
             self.save()
+
+@property
+def age(self):
+    if not self.birth_date:
+        return None
+
+    today = date.today()
+
+    return (
+        today.year
+        - self.birth_date.year
+        - (
+            (today.month, today.day)
+            < (self.birth_date.month, self.birth_date.day)
+        )
+    )
