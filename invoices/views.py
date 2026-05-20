@@ -12,6 +12,12 @@ from datetime import date
 from decimal import Decimal
 from django.utils import timezone
 import calendar
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+from .serializers import InvoiceDashboardSerializer
+
 
 
 # === ListView de faturas ===
@@ -198,3 +204,52 @@ def mark_invoice_paid(request, pk):
     else:
         messages.info(request, f'Fatura #{invoice.id} já estava marcada como paga.')
     return redirect('invoice_list')
+
+
+# ================= DASHBOARD FINANCEIRO =================
+
+class InvoiceDashboardAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        invoices = Invoice.objects.select_related(
+            "karateca",
+            "karateca__graduation",
+            "karateca__dojo",
+        ).order_by("due_date")
+
+        status = request.GET.get("status")
+
+        if status == "late":
+
+            invoices = invoices.filter(paid=False)
+
+        serializer = InvoiceDashboardSerializer(
+            invoices,
+            many=True
+        )
+
+        return Response(serializer.data)
+
+
+# ================= MARCAR COMO PAGO =================
+
+class MarkInvoicePaidAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+
+        invoice = get_object_or_404(
+            Invoice,
+            pk=pk
+        )
+
+        invoice.mark_as_paid()
+
+        return Response({
+            "success": True,
+            "message": "Fatura marcada como paga."
+        })
