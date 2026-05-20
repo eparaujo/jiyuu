@@ -72,18 +72,18 @@ class Karateca(models.Model):
             self.user = user
             self.save()
 
-@property
-def age(self):
-    if not self.birth_date:
-        return None
+    @property
+    def age(self):
+        if not self.birth_date:
+            return None
 
-    today = date.today()
+        today = date.today()
 
-    return (
-        today.year
-        - self.birth_date.year
-        - (
-            (today.month, today.day)
-            < (self.birth_date.month, self.birth_date.day)
+        return (
+            today.year
+            - self.birth_date.year
+            - (
+                (today.month, today.day)
+                < (self.birth_date.month, self.birth_date.day)
+            )
         )
-    )

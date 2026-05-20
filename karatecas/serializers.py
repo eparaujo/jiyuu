@@ -5,6 +5,8 @@ from karatecas.models import Karateca
 from dojos.models import DojoMembership
 from dojos.choices import DojoRole
 from dashboards.models import Dashboard
+from exams.models import ExamEnrollment
+from exams.models import ExamResult
 
 
 
@@ -13,9 +15,54 @@ class KaratecaSerializer(serializers.ModelSerializer):
     dojo = serializers.StringRelatedField()
     genre = serializers.StringRelatedField()
 
+    age = serializers.SerializerMethodField()
+
+    last_exam_date = serializers.SerializerMethodField()
+    last_exam_results = serializers.SerializerMethodField()
+
     class Meta:
         model = Karateca
-        fields = '__all__'  
+        fields = '__all__'
+
+    def get_age(self, obj):
+        return obj.age
+
+    def get_last_exam_date(self, obj):
+
+        enrollment = obj.exam_enrollments.select_related(
+            "exam"
+        ).order_by("-exam__date").first()
+
+        if enrollment and enrollment.exam:
+            return enrollment.exam.date
+
+        return None
+
+    def get_last_exam_results(self, obj):
+
+        enrollment = obj.exam_enrollments.select_related(
+            "exam"
+        ).prefetch_related(
+            "results__subject"
+        ).order_by("-exam__date").first()
+
+        if not enrollment:
+            return []
+
+        results = enrollment.results.all()
+
+        data = []
+
+        for result in results:
+
+            data.append({
+                "subject": result.subject.name,
+                "score": result.score,
+                "comments": result.comments,
+                "sensei_examiner": result.sensei_examiner,
+            })
+
+        return data
 
 
 class GraduationStatusSerializer(serializers.Serializer):

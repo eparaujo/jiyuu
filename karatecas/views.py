@@ -63,7 +63,13 @@ class KaratecaCreateListAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = models.Karateca.objects.select_related(
-                "graduation", "dojo", "genre").all()
+                "graduation",
+                "dojo",
+                "genre"
+            ).prefetch_related(
+                "exam_enrollments__exam",
+                "exam_enrollments__results__subject"
+            ).all()
 
         status = self.request.query_params.get("status")
 
