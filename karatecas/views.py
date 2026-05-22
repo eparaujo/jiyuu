@@ -14,7 +14,7 @@ from datetime import date
 from graduations.models import Graduation
 from genres.models import Genre
 from dojos.models import Dojo
-#from serializers import GraduationStatusSerializer
+from karatecas.serializers import GraduationStatusSerializer
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from .models import Karateca

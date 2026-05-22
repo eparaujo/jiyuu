@@ -5,7 +5,7 @@ from billingCycle.models import BillingCycle
 from invoices.models import Invoice
 from invoiceItem.models import InvoiceItem
 from karatecas.models import Karateca
-from courseEnrollment.models import CourseEnrollment
+from events.models import CourseEnrollment
 
 def generate_monthly_billing():
     """

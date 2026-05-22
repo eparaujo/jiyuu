@@ -7,6 +7,7 @@ from dojos.choices import DojoRole
 from dashboards.models import Dashboard
 from exams.models import ExamEnrollment
 from exams.models import ExamResult
+from invoices.models import Invoice
 
 
 
@@ -19,10 +20,30 @@ class KaratecaSerializer(serializers.ModelSerializer):
 
     last_exam_date = serializers.SerializerMethodField()
     last_exam_results = serializers.SerializerMethodField()
+    pending_invoice_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Karateca
-        fields = '__all__'
+        fields = [
+            "id",
+            "name",
+            "birth_date",
+            "genre",
+            "cpf",
+            "email",
+            "celphone",
+            "graduation",
+            "dan",
+            "graduation_date",
+            "dojo",
+            "active",
+            "monthly_fee",
+            "due_day",
+            "age",
+            "last_exam_date",
+            "last_exam_results",
+            "pending_invoice_id",
+        ]
 
     def get_age(self, obj):
         return obj.age
@@ -63,6 +84,19 @@ class KaratecaSerializer(serializers.ModelSerializer):
             })
 
         return data
+    
+
+    def get_pending_invoice_id(self, obj):
+
+        invoice = Invoice.objects.filter(
+            karateca=obj,
+            paid=False
+        ).order_by("due_date").first()
+
+        if invoice:
+            return invoice.id
+
+        return None
 
 
 class GraduationStatusSerializer(serializers.Serializer):
