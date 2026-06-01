@@ -55,3 +55,4 @@ urlpatterns = [
     path("exams/<int:exam_id>/enrollments/",  views.ExamEnrollmentListView.as_view(), name="exam_enrollment_list"),
     path("exams/<int:exam_id>/enrollments/create/", views.ExamEnrollmentCreateView.as_view(), name="enrollment_create"),
 ]
+ 

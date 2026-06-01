@@ -587,7 +587,7 @@ class LastExamResultDetailView(APIView):
     print("Entrando no resultado do exame")
 
     def get(self, request):
-        karateca = request.user.karateca
+        karateca = request.user.karateka
 
         enrollment = (
             ExamEnrollment.objects
@@ -606,22 +606,37 @@ class LastExamResultDetailView(APIView):
         results = ExamResult.objects.filter(enrollment=enrollment)
 
         return Response({
+
             "exam": {
+
+                "id": enrollment.exam.id,
+
+                "title": (
+                    enrollment.exam.description
+                    or "Exame de Graduação"
+                ),
+
                 "date": enrollment.exam.date,
-                "category": enrollment.category.name if enrollment.category else None
+
+                "category": (
+                    enrollment.category.name_category
+                    if enrollment.category else None
+                ),
             },
+
             "subjects": [
                 {
                     "name": r.subject.name,
                     "score": r.score,
                     "comments": r.comments
-                } for r in results
+                }
+                for r in results
             ]
         })
 
 
 # ------------------------------------------------
-# Próximo exame do dojo (APP)
+# Próximos exames do dojo (APP)
 # ------------------------------------------------
 class NextExamAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -647,7 +662,7 @@ class NextExamAPIView(APIView):
 
         today = now().date()
 
-        exam = (
+        exams = (
             Exam.objects
             .filter(
                 dojo=dojo,
@@ -661,59 +676,13 @@ class NextExamAPIView(APIView):
                 "enrollments__category",
             )
             .order_by("date")
-            .first()
         )
 
-        if not exam:
-            return Response(
-                {"detail": "Nenhum exame futuro encontrado"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        serializer = ExamDetailReadSerializer(exam)
-
-        return Response(serializer.data)
-
-"""
-# ------------------------------------------------
-# Detalhes do exame - leitura para ALUNO (APP)
-# ------------------------------------------------
-class NextExamAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-
-        membership = (
-            DojoMembership.objects
-            .select_related("dojo")
-            .filter(user=user)
-            .first()
+        serializer = ExamDetailReadSerializer(
+            exams,
+            many=True
         )
 
-        if not membership:
-            return Response(
-                {"detail": "Usuário sem vínculo com dojo"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        dojo = membership.dojo
-
-        exam = (
-            Exam.objects
-            .filter(
-                dojo=dojo,
-                status='CONFIRMADO'
-            )
-            .first()
-        )
-
-        if not exam:
-            return Response(
-                {"detail": "Nenhum exame ativo"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        serializer = ExamDetailReadSerializer(exam)
-        return Response(serializer.data)
-"""
+        return Response({
+            "results": serializer.data
+        })

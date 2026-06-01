@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from .models import TrainingAttendance
-from .serializers import TrainingAttendanceSerializer
+from .serializers import TrainingAttendanceSerializer, TrainingCheckinSessionSerializer
 from rest_framework.permissions import IsAuthenticated
 from .services import get_attendance_summary
 from django.core.exceptions import ObjectDoesNotExist
@@ -15,6 +15,13 @@ from senseis.models import Sensei
 from django.http import HttpResponseForbidden
 from dojos.models import Dojo
 from . import services
+from rest_framework import status
+from trainings.models import TrainingCheckinSession
+from classes.models import Aula
+from dojos.models import DojoMembership
+from django.utils import timezone
+from .models import (TrainingAttendance,TrainingCheckinSession)
+
 
 
 class TrainingAttendanceCreateView(APIView):
@@ -276,3 +283,204 @@ class GraduationEligibilityAPIView(APIView):
             "graduation": str(karateca.graduation),
             **data
         })
+    
+#--------------------------------------------
+# View para geração de QR code de presença
+#--------------------------------------------
+class CreateTrainingCheckinSessionAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        aula_id = request.data.get("aula_id")
+
+        if not aula_id:
+
+            return Response(
+                {"detail": "aula_id é obrigatório"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+
+            aula = Aula.objects.select_related(
+                "sensei"
+            ).get(id=aula_id)
+
+        except Aula.DoesNotExist:
+
+            return Response(
+                {"detail": "Aula não encontrada"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        membership = (
+            DojoMembership.objects
+            .select_related("dojo")
+            .filter(user=request.user)
+            .first()
+        )
+
+        if not membership:
+
+            return Response(
+                {"detail": "Usuário sem dojo"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        session = TrainingCheckinSession.objects.create(
+
+            aula=aula,
+            dojo=membership.dojo,
+            created_by=request.user
+        )
+
+        serializer = TrainingCheckinSessionSerializer(session)
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
+    
+
+
+#-----------------------------------
+# Aluno marcando presença
+#-----------------------------------
+class RegisterAttendanceByQrAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        token = request.data.get("token")
+
+        if not token:
+
+            return Response(
+                {
+                    "detail": "Token é obrigatório"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ==========================================
+        # Busca sessão do QR
+        # ==========================================
+
+        try:
+
+            session = (
+                TrainingCheckinSession.objects
+                .select_related(
+                    "dojo",
+                    "aula"
+                )
+                .get(token=token)
+            )
+
+        except TrainingCheckinSession.DoesNotExist:
+
+            return Response(
+                {
+                    "detail": "QR Code inválido"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # ==========================================
+        # QR expirado
+        # ==========================================
+
+        if not session.is_valid():
+
+            return Response(
+                {
+                    "detail": "QR Code expirado"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ==========================================
+        # Karateca do usuário autenticado
+        # ==========================================
+
+        try:
+
+            karateca = Karateca.objects.select_related(
+                "dojo"
+            ).get(user=request.user)
+
+        except Karateca.DoesNotExist:
+
+            return Response(
+                {
+                    "detail": "Usuário não vinculado a karateca"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # ==========================================
+        # Segurança dojo
+        # ==========================================
+
+        if karateca.dojo_id != session.dojo_id:
+
+            return Response(
+                {
+                    "detail": "Você não pertence a este dojo"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # ==========================================
+        # Evita presença duplicada
+        # ==========================================
+
+        today = timezone.localdate()
+
+        already_exists = (
+            TrainingAttendance.objects.filter(
+                karateca=karateca,
+                aula=session.aula,
+                training_date=today
+            ).exists()
+        )
+
+        if already_exists:
+
+            return Response(
+                {
+                    "detail": "Presença já registrada hoje"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ==========================================
+        # Registra presença
+        # ==========================================
+
+        attendance = TrainingAttendance.objects.create(
+
+            karateca=karateca,
+
+            dojo=session.dojo,
+
+            aula=session.aula,
+
+            training_date=today,
+
+            present=True
+        )
+
+        return Response(
+            {
+                "detail": "Presença registrada com sucesso",
+                "attendance_id": attendance.id,
+                "karateca": karateca.name,
+                "aula": session.aula.name,
+                "date": today
+            },
+            status=status.HTTP_201_CREATED
+        )

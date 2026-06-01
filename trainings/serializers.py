@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TrainingAttendance
+from .models import TrainingAttendance, TrainingCheckinSession
 
 
 class TrainingAttendanceSerializer(serializers.ModelSerializer):
@@ -20,4 +20,32 @@ class TrainingAttendanceSerializer(serializers.ModelSerializer):
             "dojo_name",
             "training_date",
             "present",
+        ]
+
+#serializer para geração de QR Code
+class TrainingCheckinSessionSerializer(serializers.ModelSerializer):
+
+    aula_name = serializers.CharField(
+        source="aula.name",
+        read_only=True
+    )
+
+    dojo_name = serializers.CharField(
+        source="dojo.name",
+        read_only=True
+    )
+
+    class Meta:
+
+        model = TrainingCheckinSession
+
+        fields = [
+            "id",
+            "token",
+            "aula",
+            "aula_name",
+            "dojo",
+            "dojo_name",
+            "expires_at",
+            "created_at",
         ]

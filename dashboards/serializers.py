@@ -18,12 +18,15 @@ class DashboardSerializer(serializers.ModelSerializer):
     # 🔹 novo campo para expor o id do próximo exame
     next_exam_id = serializers.SerializerMethodField()
 
+    studentName = serializers.SerializerMethodField()
+ 
     class Meta:
         model = Dashboard
         fields = [
             "id",
             "dojoName",
             "sensei_name",
+            "studentName",
             "active_students",           
             "last_exam_date",
             "last_exam_participants",
@@ -39,6 +42,21 @@ class DashboardSerializer(serializers.ModelSerializer):
         ]
 
    
+    def get_studentName(self, obj):
+        request = self.context.get("request")
+
+        if not request or not request.user.is_authenticated:
+            return "Karateka"
+
+        user = request.user
+
+        # 🔹 vínculo User -> Karateka
+        if hasattr(user, "karateka"):
+            return user.karateka.name
+
+        # fallback
+        return user.get_full_name() or user.username
+    
     def get_dojoName(self, obj):
         """
         Retorna o nome fantasia do dojo se existir,
