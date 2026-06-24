@@ -35,21 +35,9 @@ class Dojo(models.Model):
     
  #class view usada para perfís de acesso   
 class DojoMembership(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='dojo_memberships'
-    )
-    dojo = models.ForeignKey(
-        'Dojo',
-        on_delete=models.CASCADE,
-        related_name='memberships'
-    )
-    role = models.CharField(
-        max_length=20,
-        choices=DojoRole.choices,
-        default=DojoRole.STUDENT
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dojo_memberships')
+    dojo = models.ForeignKey('Dojo', on_delete=models.CASCADE, related_name='memberships')
+    role = models.CharField(max_length=20, choices=DojoRole.choices, default=DojoRole.STUDENT)
     is_active = models.BooleanField(default=True)        # utilizado para "deletar", porém apenas inativa o aluno/atleta
     created_at = models.DateTimeField(auto_now_add=True)
 
