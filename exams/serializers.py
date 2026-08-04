@@ -325,6 +325,8 @@ class ExamCategoryDetailSerializer(serializers.ModelSerializer):
     def get_registrations(self, obj):
         exam = self.context.get("exam")
 
+        print(f"\n===== Categoria: {obj.name_category} ({obj.id}) =====")
+
         enrollments = ExamEnrollment.objects.filter(
             exam=exam,
             category=obj

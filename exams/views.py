@@ -471,10 +471,46 @@ class ExamResultDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy("result_list")
 
 
-class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+#class ExamRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+#    queryset = models.Exam.objects.all()
+#    serializer_class = serializers.ExamSerializer
+#    permission_classes = [IsAuthenticated, IsOwnerOrExaminer]
+class ExamRetrieveUpdateDestroyAPIView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+
     queryset = models.Exam.objects.all()
+
     serializer_class = serializers.ExamSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrExaminer]
+
+    permission_classes = [
+        IsAuthenticated,
+        IsOwnerOrExaminer,
+    ]
+
+    def get_serializer_context(self):
+
+        context = super().get_serializer_context()
+
+        exam = self.get_object()
+
+        category_name = self.request.query_params.get("category")
+
+        if category_name:
+
+            participants = exam.enrollments.filter(
+                category__name_category__iexact=category_name
+            ).select_related(
+                "karateca",
+                "karateca__graduation",
+                "category",
+            )
+
+            context["filtered_participants"] = participants
+            context["selected_category"] = category_name
+
+        return context
+
     
 
 class ExamCreateListAPIView(generics.ListCreateAPIView):
