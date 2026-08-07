@@ -1,7 +1,6 @@
-# exams/views.py
 from typing import Any
 from django.db.models.query import QuerySet
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView, View
 from django.urls import reverse_lazy
 from rest_framework.response import Response
@@ -12,10 +11,9 @@ from rest_framework import generics
 from . import serializers
 from .serializers import ExamResultSerializer, ExamRequirementWithResultSerializer, ExamEnrollmentSerializer, ExamSerializer, ExamEnrollmentSerializer, ExamDetailReadSerializer
 from rest_framework.views import APIView
-from .models import ExamEnrollment, Exam, ExamCategory, ExamRequirement, ExamResult
+from .models import ExamEnrollment, Exam, ExamCategory, ExamRequirement, ExamResult, ExamSubject
 from examcategories.models import ExamCategory
 from senseis.models import Sensei
-from django.shortcuts import get_object_or_404
 from exams.permissions import IsOwnerOrExaminer
 from rest_framework.permissions import IsAuthenticated
 from collections import OrderedDict
@@ -30,7 +28,65 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 from datetime import timedelta
 from django.db.models import Q
+from decimal import Decimal
 
+
+# -------------------------------
+# Função auxiliar para carregar as matérias do EXAME
+# -------------------------------
+def sync_exam_requirements(exam):
+    """
+    Sincroniza os requisitos do exame.
+
+    - Cria automaticamente as combinações Categoria x Matéria inexistentes.
+    - Remove requisitos de categorias que foram retiradas do exame.
+    - Remove requisitos de matérias que foram excluídas do cadastro.
+    - Preserva as notas dos requisitos existentes.
+    """
+
+    categories = list(exam.categories.all())
+    subjects = list(models.ExamSubject.objects.all())
+
+    valid_pairs = {
+        (category.id, subject.id)
+        for category in categories
+        for subject in subjects
+    }
+
+    existing_requirements = models.ExamRequirement.objects.filter(exam=exam)
+
+    existing_pairs = {
+        (req.category_id, req.subject_id)
+        for req in existing_requirements
+    }
+
+    # Remove registros órfãos
+    existing_requirements.exclude(
+        category__in=categories,
+        subject__in=subjects,
+    ).delete()
+
+    # Cria apenas os registros faltantes
+    new_requirements = []
+
+    for category in categories:
+        for subject in subjects:
+
+            if (category.id, subject.id) in existing_pairs:
+                continue
+
+            new_requirements.append(
+                models.ExamRequirement(
+                    exam=exam,
+                    category=category,
+                    subject=subject,
+                    min_score=0,
+                    max_score=10,
+                )
+            )
+
+    if new_requirements:
+        models.ExamRequirement.objects.bulk_create(new_requirements)
 
 # -------------------------------
 # EXAM
@@ -41,11 +97,23 @@ class ExamListView(LoginRequiredMixin, ListView):
     context_object_name = "exams"
     paginate_by = 10
 
-    def get_queryset(self): 
-        queryset = super().get_queryset()
+    def get_queryset(self):
+
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("dojo")
+            .prefetch_related("categories")
+            .order_by("-date")
+        )
+
         description = self.request.GET.get("description")
+
         if description:
-            queryset = queryset.filter(description__icontains=description)
+            queryset = queryset.filter(
+                description__icontains=description
+            )
+
         return queryset
  
  
@@ -54,6 +122,14 @@ class ExamCreateView(LoginRequiredMixin, CreateView):
     template_name = "exam_create.html"
     form_class = forms.ExamForm
     success_url = reverse_lazy("exam_list")
+
+    def form_valid(self, form):
+
+        response = super().form_valid(form)
+
+        sync_exam_requirements(self.object)
+
+        return response
 
 
 class ExamDetailView(LoginRequiredMixin, DetailView):
@@ -105,6 +181,14 @@ class ExamUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "exam_update.html"
     form_class = forms.ExamForm
     success_url = reverse_lazy("exam_list")
+
+    def form_valid(self, form):
+
+        response = super().form_valid(form)
+
+        sync_exam_requirements(self.object)
+
+        return response
 
 
 class ExamDeleteView(LoginRequiredMixin, DeleteView):
@@ -722,3 +806,145 @@ class NextExamAPIView(APIView):
         return Response({
             "results": serializer.data
         })
+
+# nova view para configuração do exame
+
+class ExamRequirementConfigView(LoginRequiredMixin, View):
+
+    template_name = "exam_requirement_config.html"
+
+    def build_context(self, exam):
+
+        categories = list(
+            exam.categories.all().order_by("id")
+        )
+
+        subjects = list(
+            ExamSubject.objects.all().order_by("name")
+        )
+
+        requirements = ExamRequirement.objects.filter(
+            exam=exam
+        )
+
+        requirement_map = {
+            (r.category_id, r.subject_id): r
+            for r in requirements
+        }
+
+        rows = []
+
+        for subject in subjects:
+
+            scores = []
+
+            for category in categories:
+
+                requirement = requirement_map.get(
+                    (category.id, subject.id)
+                )
+
+                scores.append({
+
+                    "category": category,
+
+                    "min_score": requirement.min_score if requirement else "",
+
+                    "max_score": requirement.max_score if requirement else "",
+
+                })
+
+            rows.append({
+
+                "subject": subject,
+
+                "scores": scores,
+
+            })
+
+        return {
+
+            "exam": exam,
+
+            "categories": categories,
+
+            "rows": rows,
+
+        }
+
+    def get(self, request, pk):
+
+        exam = get_object_or_404(
+            Exam,
+            pk=pk
+        )
+
+        return render(
+            request,
+            self.template_name,
+            self.build_context(exam)
+        )
+
+    def post(self, request, pk):
+
+        exam = get_object_or_404(
+            Exam,
+            pk=pk
+        )
+
+        categories = exam.categories.all()
+
+        subjects = ExamSubject.objects.all()
+
+        for category in categories:
+
+            for subject in subjects:
+
+                min_value = request.POST.get(
+                    f"min_{subject.id}_{category.id}"
+                )
+
+                max_value = request.POST.get(
+                    f"max_{subject.id}_{category.id}"
+                )
+
+                if (
+                    min_value == ""
+                    and
+                    max_value == ""
+                ):
+                    ExamRequirement.objects.filter(
+                        exam=exam,
+                        category=category,
+                        subject=subject,
+                    ).delete()
+
+                    continue
+
+                ExamRequirement.objects.update_or_create(
+
+                    exam=exam,
+
+                    category=category,
+
+                    subject=subject,
+
+                    defaults={
+
+                        "min_score": Decimal(min_value),
+
+                        "max_score": Decimal(max_value),
+
+                    }
+
+                )
+
+        messages.success(
+            request,
+            "Configuração salva com sucesso."
+        )
+
+        return redirect(
+            "exam_requirement_config",
+            pk=exam.pk
+        )   

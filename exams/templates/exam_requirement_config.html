@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}
+Configuração das Matérias do Exame
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="mb-1">
+
+                Configuração das Matérias
+
+            </h2>
+
+            <div class="text-muted">
+
+                {{ exam }}
+
+            </div>
+
+        </div>
+
+        <div>
+
+            <a
+                href="{% url 'exam_list' %}"
+                class="btn btn-outline-secondary">
+
+                <i class="fas fa-arrow-left"></i>
+
+                Voltar
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-success">
+
+                {{ message }}
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="card shadow">
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-bordered table-hover align-middle mb-0">
+
+                        <thead class="table-dark">
+
+                        <tr>
+
+                            <th style="min-width:220px">
+
+                                Matéria
+
+                            </th>
+
+                            {% for category in categories %}
+
+                                <th colspan="2"
+                                    class="text-center">
+
+                                    {{ category }}
+
+                                </th>
+
+                            {% endfor %}
+
+                        </tr>
+
+                        <tr>
+
+                            <th></th>
+
+                            {% for category in categories %}
+
+                                <th class="text-center">
+
+                                    Mín.
+
+                                </th>
+
+                                <th class="text-center">
+
+                                    Máx.
+
+                                </th>
+
+                            {% endfor %}
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for row in rows %}
+
+                        <tr>
+
+                            <td>
+
+                                <strong>
+
+                                    {{ row.subject.name }}
+
+                                </strong>
+
+                            </td>
+
+                            {% for score in row.scores %}
+
+                                <td>
+
+                                    <input
+
+                                        type="number"
+
+                                        step="0.5"
+
+                                        min="0"
+
+                                        max="10"
+
+                                        class="form-control text-center"
+
+                                        name="min_{{ row.subject.id }}_{{ score.category.id }}"
+
+                                        value="{{ score.min_score }}">
+
+                                </td>
+
+                                <td>
+
+                                    <input
+
+                                        type="number"
+
+                                        step="0.5"
+
+                                        min="0"
+
+                                        max="10"
+
+                                        class="form-control text-center"
+
+                                        name="max_{{ row.subject.id }}_{{ score.category.id }}"
+
+                                        value="{{ score.max_score }}">
+
+                                </td>
+
+                            {% endfor %}
+
+                        </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+
+            <div class="text-muted">
+
+                Configure todas as categorias em uma única tela.
+
+            </div>
+
+            <button
+                class="btn btn-success btn-lg"
+                type="submit">
+
+                <i class="fas fa-save"></i>
+
+                Salvar Configuração
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

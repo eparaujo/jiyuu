@@ -15,14 +15,13 @@ urlpatterns = [
     path('subjects/<int:pk>/update/', views.ExamSubjectUpdateView.as_view(), name='subject_update'),
     path('subjects/<int:pk>/delete/', views.ExamSubjectDeleteView.as_view(), name='subject_delete'),
 
-    path('requirements/list/', views.ExamRequirementListView.as_view(), name='requirement_list'),
-    path('requirements/create/', views.ExamRequirementCreateView.as_view(), name='requirement_create'),
-    path('requirements/<int:pk>/detail/', views.ExamRequirementDetailView.as_view(), name='requirement_detail'),
-    path('requirements/<int:pk>/update/', views.ExamRequirementUpdateView.as_view(), name='requirement_update'),
-    path('requirements/<int:pk>/delete/', views.ExamRequirementDeleteView.as_view(), name='requirement_delete'),
+    #path('requirements/list/', views.ExamRequirementListView.as_view(), name='requirement_list'),
+    #path('requirements/create/', views.ExamRequirementCreateView.as_view(), name='requirement_create'),
+    #path('requirements/<int:pk>/detail/', views.ExamRequirementDetailView.as_view(), name='requirement_detail'),
+    #path('requirements/<int:pk>/update/', views.ExamRequirementUpdateView.as_view(), name='requirement_update'),
+    #path('requirements/<int:pk>/delete/', views.ExamRequirementDeleteView.as_view(), name='requirement_delete'),
 
-    path('enrollments/list/', views.ExamEnrollmentListView.as_view(), name='enrollment_list'),
-    #path('enrollments/create/', views.ExamEnrollmentCreateView.as_view(), name='enrollment_create'),
+    path('enrollments/list/', views.ExamEnrollmentListView.as_view(), name='enrollment_list'),    
     path('enrollments/<int:pk>/detail/', views.ExamEnrollmentDetailView.as_view(), name='enrollment_detail'),
     path('enrollments/<int:pk>/update/', views.ExamEnrollmentUpdateView.as_view(), name='enrollment_update'),
     path('enrollments/<int:pk>/delete/', views.ExamEnrollmentDeleteView.as_view(), name='enrollment_delete'),
@@ -54,5 +53,8 @@ urlpatterns = [
     # ENROLLMENTS (sempre dentro do exame)
     path("exams/<int:exam_id>/enrollments/",  views.ExamEnrollmentListView.as_view(), name="exam_enrollment_list"),
     path("exams/<int:exam_id>/enrollments/create/", views.ExamEnrollmentCreateView.as_view(), name="enrollment_create"),
+    #Novo endpoint para configuração das matérias do exame
+    path("exams/<int:pk>/requirements/", views.ExamRequirementConfigView.as_view(), name="exam_requirement_config", ),
+
 ]
  
