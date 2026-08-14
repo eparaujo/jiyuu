@@ -21,7 +21,8 @@ from rest_framework.generics import RetrieveAPIView
 from .permissions import IsExamStudent
 from rest_framework.exceptions import NotFound
 from dojos.models import DojoMembership
-from trainings.services import can_do_exam
+#from trainings.services import can_do_exam
+from .services import can_do_exam
 from django.contrib import messages
 from .forms import ExamEnrollmentForm
 from django.core.exceptions import ValidationError
@@ -349,58 +350,143 @@ class ExamEnrollmentListView(LoginRequiredMixin, ListView):
         context["exam"] = self.exam
         return context
 
+
 class ExamEnrollmentCreateView(LoginRequiredMixin, CreateView):
+
     model = ExamEnrollment
     template_name = "enrollment_create.html"
     form_class = ExamEnrollmentForm
-    success_url = reverse_lazy("exam_list")
+    #success_url = reverse_lazy("exam_list")
 
     def get_form_kwargs(self):
-        """
-        Injeta o exame no form para GET e POST
-        """
+
         kwargs = super().get_form_kwargs()
+
         exam_id = self.kwargs.get("exam_id")
 
-        self.exam = models.Exam.objects.select_related("dojo").get(pk=exam_id)
+        self.exam = models.Exam.objects.select_related(
+            "dojo"
+        ).get(pk=exam_id)
+
         kwargs["exam"] = self.exam
 
         return kwargs
 
-    def form_valid(self, form):
-        """
-        Validação central de negócio:
-        impede inscrição se karateca estiver em carência
-        """
+    def get_context_data(self, **kwargs):
 
-        # 🔒 GARANTE o vínculo correto
+        context = super().get_context_data(**kwargs)
+
+        context["exam"] = self.exam
+
+        return context
+
+    def form_valid(self, form):
+
+        # --------------------------------------------------
+        # 1. Vincula a inscrição ao exame
+        # --------------------------------------------------
+
         form.instance.exam = self.exam
 
-        karateca = form.cleaned_data.get("karateca")
+        # --------------------------------------------------
+        # 2. Obtém os dados selecionados no formulário
+        # --------------------------------------------------
 
-        # 🔒 REGRA DE NEGÓCIO (ETAPA 7)
-        can_exam, reason = can_do_exam(karateca)
-        if not can_exam:
-            messages.error(self.request, reason)
-            return self.form_invalid(form)
+        karateca = form.cleaned_data["karateca"]
+        category = form.cleaned_data["category"]
 
-        # Evita inscrição duplicada
-        if ExamEnrollment.objects.filter(
-            exam=self.exam,
-            karateca=karateca
-        ).exists():
-            messages.warning(
+        # --------------------------------------------------
+        # 3. Obtém a graduação atual REAL do karateca
+        #
+        # IMPORTANTE:
+        #
+        # karateca.graduation é uma instância de Graduation.
+        #
+        # Portanto, é este objeto que deve ser atribuído
+        # ao ForeignKey current_graduation.
+        # --------------------------------------------------
+
+        current_graduation = karateca.graduation
+
+        # --------------------------------------------------
+        # 4. Segurança
+        #
+        # Karateca sem graduação não pode ser inscrito.
+        # --------------------------------------------------
+
+        if not current_graduation:
+
+            messages.error(
                 self.request,
-                "Este karateca já está inscrito neste exame."
+                "O karateca selecionado não possui graduação atual."
             )
+
             return self.form_invalid(form)
+
+        # --------------------------------------------------
+        # 5. Grava a graduação atual REAL
+        #
+        # NÃO usamos:
+        #
+        # current_graduation_display
+        #
+        # Esse campo é somente visual.
+        # --------------------------------------------------
+
+        form.instance.current_graduation = current_graduation
+
+        # --------------------------------------------------
+        # 6. Verifica todas as regras de elegibilidade
+        # --------------------------------------------------
+
+        can_exam, reason = can_do_exam(
+            karateca=karateca,
+            exam=self.exam,
+            category=category,
+            break_grace_period=False,
+        )
+
+        if not can_exam:
+
+            messages.error(
+                self.request,
+                reason
+            )
+
+            return self.form_invalid(form)
+
+        # --------------------------------------------------
+        # 7. Salva explicitamente a inscrição
+        # --------------------------------------------------
+        
+        enrollment = form.save()
+
+        # --------------------------------------------------
+        # 8. Guarda o objeto salvo na View
+        #
+        # Isso também mantém o comportamento esperado
+        # das Generic Views do Django.
+        # --------------------------------------------------
+
+        self.object = enrollment
+
+        # --------------------------------------------------
+        # 9. Mensagem de sucesso
+        # --------------------------------------------------
 
         messages.success(
             self.request,
             "Karateca inscrito com sucesso no exame."
         )
-        return super().form_valid(form)
-    
+
+        # --------------------------------------------------
+        # 10. Redireciona para o detalhe do exame
+        # --------------------------------------------------
+
+        return redirect(
+            "exam_detail",
+            self.exam.id
+        )
 
 class ExamEnrollmentDetailView(LoginRequiredMixin, DetailView):
     model = models.ExamEnrollment

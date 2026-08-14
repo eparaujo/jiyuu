@@ -6,9 +6,9 @@ from dojos.choices import DojoRole
 from rest_framework.exceptions import PermissionDenied
 
 
-# -----------------------------------------------------------------------------  
-# Serializer para resultados individuais (input/output das notas e comentários)  
-# -----------------------------------------------------------------------------  
+# -----------------------------------------------------------------------------
+# Serializer para resultados individuais (input/output das notas e comentários)
+# -----------------------------------------------------------------------------
 class ExamResultSerializer(serializers.ModelSerializer):
     subject_name = serializers.CharField(source="subject.name", read_only=True)
     sensei_examiner_name = serializers.CharField(
@@ -29,9 +29,9 @@ class ExamResultSerializer(serializers.ModelSerializer):
         ]
 
 
-# -----------------------------------------------------------------------------  
-# Serializer para as matérias (requirements) de cada exame  
-# -----------------------------------------------------------------------------  
+# -----------------------------------------------------------------------------
+# Serializer para as matérias (requirements) de cada exame
+# -----------------------------------------------------------------------------
 class ExamRequirementWithResultSerializer(serializers.ModelSerializer):
     subject_id = serializers.IntegerField(source="subject.id", read_only=True)
     subject_name = serializers.CharField(source="subject.name", read_only=True)
@@ -39,10 +39,17 @@ class ExamRequirementWithResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExamRequirement
-        fields = ["subject_id", "subject_name", "min_score", "max_score", "score"]
+        fields = [
+            "subject_id",
+            "subject_name",
+            "min_score",
+            "max_score",
+            "score",
+        ]
 
     def get_score(self, obj):
         enrollment = self.context.get("enrollment")
+
         if not enrollment:
             return 0
 
@@ -54,17 +61,32 @@ class ExamRequirementWithResultSerializer(serializers.ModelSerializer):
         return result.score if result else 0
 
 
-# -----------------------------------------------------------------------------  
-# Serializer para os participantes do exame  
-# -----------------------------------------------------------------------------  
+# -----------------------------------------------------------------------------
+# Serializer para os participantes do exame
+# -----------------------------------------------------------------------------
 class ExamEnrollmentSerializer(serializers.ModelSerializer):
-    karateca_name = serializers.CharField(source="karateca.name", read_only=True)
-    karateca_graduation = serializers.CharField(source="karateca.graduation", read_only=True)
-    category_name = serializers.CharField(source="category.name", read_only=True)
+    karateca_name = serializers.CharField(
+        source="karateca.name",
+        read_only=True
+    )
+
+    karateca_graduation = serializers.CharField(
+        source="karateca.graduation",
+        read_only=True
+    )
+
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True
+    )
 
     subjects = serializers.SerializerMethodField()
     approved = serializers.SerializerMethodField()
-    results = ExamResultSerializer(many=True, required=False)
+
+    results = ExamResultSerializer(
+        many=True,
+        required=False
+    )
 
     class Meta:
         model = ExamEnrollment
@@ -83,6 +105,7 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         requirements = obj.exam.requirements.filter(
             category=obj.category
         )
+
         return ExamRequirementWithResultSerializer(
             requirements,
             many=True,
@@ -90,6 +113,16 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         ).data
 
     def get_approved(self, obj):
+        """
+        Considera o karateca aprovado somente se:
+
+        1. Existirem requisitos configurados para a categoria;
+        2. Existir resultado para todas as matérias;
+        3. A nota de cada matéria for >= min_score.
+
+        O max_score NÃO participa da regra de aprovação.
+        """
+
         requirements = obj.exam.requirements.filter(
             category=obj.category
         )
@@ -98,29 +131,52 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
             return False
 
         for req in requirements:
+
             result = ExamResult.objects.filter(
                 enrollment=obj,
                 subject=req.subject
             ).first()
-            
+
+            # Não possui nota para a matéria
             if not result:
                 return False
-            
+
+            # Nota abaixo do mínimo exigido
             if result.score < req.min_score:
                 return False
 
         return True
 
     def update(self, instance, validated_data):
+        """
+        Atualiza os resultados do exame e, ao final, recalcula:
+
+        - aprovação da inscrição;
+        - graduação do karateca, caso aprovado.
+
+        A aprovação considera somente o min_score de cada requisito.
+        """
+
         results_data = validated_data.pop("results", None)
+
         request = self.context.get("request")
 
         sensei_name = "Desconhecido"
+
         if request and request.user.is_authenticated:
-            sensei_name = request.user.get_full_name() or request.user.username
+            sensei_name = (
+                request.user.get_full_name()
+                or request.user.username
+            )
+
+        # ==============================================================
+        # 1. Atualiza os resultados das matérias
+        # ==============================================================
 
         if results_data:
+
             for result_data in results_data:
+
                 subject = result_data["subject"]
                 score = result_data.get("score", 0)
                 comments = result_data.get("comments", "")
@@ -135,60 +191,109 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
                     },
                 )
 
+        # ==============================================================
+        # 2. Atualiza os demais campos da inscrição
+        # ==============================================================
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
-        return instance
 
-        # 🔹 Atualiza aprovação e graduação
+        # ==============================================================
+        # 3. Recalcula aprovação
+        # ==============================================================
+
         requirements = instance.exam.requirements.filter(
             category=instance.category
         )
 
         approved = True
-        for req in requirements:
-            result = ExamResult.objects.filter(
-                enrollment=instance,
-                subject=req.subject
-            ).first()
 
-            score = result.score if result else 0
+        # Sem requisitos configurados, não aprova
+        if not requirements.exists():
+            approved = False
 
-            if score < req.min_score:
-                approved = False
-                break
+        else:
+
+            for req in requirements:
+
+                result = ExamResult.objects.filter(
+                    enrollment=instance,
+                    subject=req.subject
+                ).first()
+
+                # Não existe resultado para uma matéria obrigatória
+                if not result:
+                    approved = False
+                    break
+
+                # Somente o min_score determina aprovação
+                if result.score < req.min_score:
+                    approved = False
+                    break
+
+        # ==============================================================
+        # 4. Persiste o resultado da aprovação
+        # ==============================================================
 
         instance.approved = approved
-        instance.save()
+        instance.save(
+            update_fields=["approved"]
+        )
 
-        # 🔹 SE aprovado → atualiza graduação
-        if approved and instance.category and instance.category.to_graduation:
+        # ==============================================================
+        # 5. Se aprovado, atualiza a graduação do karateca
+        # ==============================================================
+
+        if (
+            approved
+            and instance.category
+            and instance.category.to_graduation
+        ):
+
             karateca = instance.karateca
 
-            # evita update desnecessário
+            # Evita update desnecessário
             if karateca.graduation != instance.category.to_graduation:
+
                 karateca.graduation = instance.category.to_graduation
-                karateca.save()
+                karateca.save(
+                    update_fields=["graduation"]
+                )
+
+        return instance
 
 
 class ExamCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamCategory
-        fields = ['id', 'name_category', 'description'] 
-    
+        fields = [
+            'id',
+            'name_category',
+            'description'
+        ]
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['name'] = instance.name_category
         return data
 
 
-# -----------------------------------------------------------------------------  
-# Serializer principal do exame  
-# -----------------------------------------------------------------------------  
+# -----------------------------------------------------------------------------
+# Serializer principal do exame
+# -----------------------------------------------------------------------------
 class ExamSerializer(serializers.ModelSerializer):
-    dojo_name = serializers.CharField(source="dojo.tradename", read_only=True)
-    categories = ExamCategorySerializer(many=True, read_only=True)
+    dojo_name = serializers.CharField(
+        source="dojo.tradename",
+        read_only=True
+    )
+
+    categories = ExamCategorySerializer(
+        many=True,
+        read_only=True
+    )
+
     participants = serializers.SerializerMethodField()
     selected_category = serializers.SerializerMethodField()
 
@@ -218,41 +323,78 @@ class ExamSerializer(serializers.ModelSerializer):
 
     def get_participants(self, obj):
         filtered = self.context.get("filtered_participants")
+
         if filtered is not None:
-            return ExamEnrollmentSerializer(filtered, many=True).data
-        return ExamEnrollmentSerializer(obj.enrollments.all(), many=True).data
+            return ExamEnrollmentSerializer(
+                filtered,
+                many=True
+            ).data
+
+        return ExamEnrollmentSerializer(
+            obj.enrollments.all(),
+            many=True
+        ).data
 
     def get_selected_category(self, obj):
-        return self.context.get("selected_category", None)
+        return self.context.get(
+            "selected_category",
+            None
+        )
 
     def update(self, instance, validated_data):
         request = self.context['request']
         user = getattr(request, "user", None)
 
         if user and not validated_data.get("sensei_examiner"):
+
             try:
-                sensei = Sensei.objects.get(user=user)
+                sensei = Sensei.objects.get(
+                    user=user
+                )
+
                 validated_data["sensei_examiner"] = sensei
+
             except Sensei.DoesNotExist:
                 pass
 
-        participants_data = request.data.get("participants", None)
+        participants_data = request.data.get(
+            "participants",
+            None
+        )
+
         if participants_data:
+
             for participant_data in participants_data:
+
                 participant_id = participant_data.get("id")
+
                 if participant_id:
-                    enrollment = ExamEnrollment.objects.get(id=participant_id)
+
+                    enrollment = ExamEnrollment.objects.get(
+                        id=participant_id
+                    )
+
                     serializer = ExamEnrollmentSerializer(
                         enrollment,
                         data=participant_data,
                         partial=True,
-                        context={'request': request}
+                        context={
+                            'request': request
+                        }
                     )
-                    serializer.is_valid(raise_exception=True)
+
+                    serializer.is_valid(
+                        raise_exception=True
+                    )
+
                     serializer.save()
 
         instance.save()
-        return super().update(instance, validated_data)
+
+        return super().update(
+            instance,
+            validated_data
+        )
 
 
 # -------------------------------------------------------------------------
@@ -260,9 +402,20 @@ class ExamSerializer(serializers.ModelSerializer):
 # -------------------------------------------------------------------------
 
 class ExamParticipantReadSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source="karateca.name", read_only=True)
-    kyu = serializers.CharField(source="karateca.graduation", read_only=True)
-    belt = serializers.CharField(source="karateca.graduation", read_only=True)
+    student_name = serializers.CharField(
+        source="karateca.name",
+        read_only=True
+    )
+
+    kyu = serializers.CharField(
+        source="karateca.graduation",
+        read_only=True
+    )
+
+    belt = serializers.CharField(
+        source="karateca.graduation",
+        read_only=True
+    )
 
     class Meta:
         model = ExamEnrollment
@@ -274,7 +427,10 @@ class ExamParticipantReadSerializer(serializers.ModelSerializer):
 
 
 class ExamRequirementReadSerializer(serializers.ModelSerializer):
-    subject = serializers.CharField(source="subject.name", read_only=True)
+    subject = serializers.CharField(
+        source="subject.name",
+        read_only=True
+    )
 
     class Meta:
         model = ExamRequirement
@@ -286,7 +442,11 @@ class ExamRequirementReadSerializer(serializers.ModelSerializer):
 
 
 class ExamCategoryDetailSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source="name_category", read_only=True)
+    name = serializers.CharField(
+        source="name_category",
+        read_only=True
+    )
+
     from_kyu = serializers.SerializerMethodField()
     to_kyu = serializers.SerializerMethodField()
     subjects = serializers.SerializerMethodField()
@@ -304,12 +464,19 @@ class ExamCategoryDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_from_kyu(self, obj):
-        return obj.from_graduation if hasattr(obj, "from_graduation") else None
+        return (
+            obj.from_graduation
+            if hasattr(obj, "from_graduation")
+            else None
+        )
 
     def get_to_kyu(self, obj):
-        return obj.to_graduation if hasattr(obj, "to_graduation") else None
+        return (
+            obj.to_graduation
+            if hasattr(obj, "to_graduation")
+            else None
+        )
 
-    # ✅ CORREÇÃO AQUI (única alteração)
     def get_subjects(self, obj):
         exam = self.context.get("exam")
 
@@ -320,21 +487,32 @@ class ExamCategoryDetailSerializer(serializers.ModelSerializer):
             exam=exam,
             category=obj
         )
-        return ExamRequirementReadSerializer(requirements, many=True).data
+
+        return ExamRequirementReadSerializer(
+            requirements,
+            many=True
+        ).data
 
     def get_registrations(self, obj):
         exam = self.context.get("exam")
 
-        print(f"\n===== Categoria: {obj.name_category} ({obj.id}) =====")
+        print(
+            f"\n===== Categoria: "
+            f"{obj.name_category} ({obj.id}) ====="
+        )
 
         enrollments = ExamEnrollment.objects.filter(
             exam=exam,
             category=obj
         ).select_related(
-            "karateca", "karateca__graduation"
+            "karateca",
+            "karateca__graduation"
         )
 
-        return ExamParticipantReadSerializer(enrollments, many=True).data
+        return ExamParticipantReadSerializer(
+            enrollments,
+            many=True
+        ).data
 
 
 class ExamDetailReadSerializer(serializers.ModelSerializer):
@@ -342,13 +520,18 @@ class ExamDetailReadSerializer(serializers.ModelSerializer):
         source="dojo.tradename",
         read_only=True
     )
+
     status = serializers.CharField(
         source="get_status_display",
         read_only=True
     )
+
     categories = serializers.SerializerMethodField()
 
-    description = serializers.CharField(allow_null=True, required=False)
+    description = serializers.CharField(
+        allow_null=True,
+        required=False
+    )
 
     class Meta:
         model = Exam

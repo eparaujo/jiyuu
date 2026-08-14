@@ -2,12 +2,12 @@ from django import forms
 from . import models
 from .models import ExamEnrollment
 from examcategories.models import ExamCategory
+from graduations.models import Graduation
+from karatecas.models import Karateca
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 from datetime import timedelta
 from senseis.models import Sensei
-from dojos.models import DojoMembership
-from dojos.choices import DojoRole
 from dojos.models import DojoMembership
 from dojos.choices import DojoRole
 
@@ -77,25 +77,218 @@ class ExamRequirementForm(forms.ModelForm):
 # -------------------------------
 class ExamEnrollmentForm(forms.ModelForm):
 
-    class Meta:
-        model = ExamEnrollment
-        fields = ["karateca", "current_graduation", "category"]
+    # --------------------------------------------------
+    # Campo apenas para visualização
+    # --------------------------------------------------
 
-    def __init__(self, *args, **kwargs):
-        exam = kwargs.pop("exam", None)
-        if not exam:
-            raise ValueError("ExamEnrollmentForm exige um exame")
+    current_graduation_display = forms.CharField(
+        label="Graduação atual",
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control"
+            }
+        )
+    )
+
+    # --------------------------------------------------
+    # Campo apenas para visualização
+    # --------------------------------------------------
+
+    next_graduation_display = forms.CharField(
+        label="Próxima graduação",
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control"
+            }
+        )
+    )
+
+    class Meta:
+        model = models.ExamEnrollment
+
+        # --------------------------------------------------
+        # IMPORTANTE:
+        #
+        # current_graduation não entra aqui porque será
+        # preenchido automaticamente pela View a partir
+        # da graduação real do Karateca.
+        #
+        # current_graduation_display e
+        # next_graduation_display são somente visuais.
+        # --------------------------------------------------
+
+        fields = [
+            "karateca",
+            "category",
+        ]
+
+        widgets = {
+            "karateca": forms.Select(
+                attrs={
+                    "class": "form-control"
+                }
+            ),
+            "category": forms.Select(
+                attrs={
+                    "class": "form-control"
+                }
+            ),
+        }
+
+        labels = {
+            "karateca": "Karateca",
+            "category": "Categoria do Exame - Faixa",
+        }
+
+    def __init__(self, *args, exam=None, **kwargs):
 
         super().__init__(*args, **kwargs)
 
         self.exam = exam
 
-        self.fields["karateca"].queryset = models.Karateca.objects.filter(
-            dojo=exam.dojo,
-            active="ATIVO"
-        ).order_by("name")
+        # --------------------------------------------------
+        # 1. Inicialmente não temos karateca selecionado
+        # --------------------------------------------------
 
-        self.fields["category"].queryset = exam.categories.all()
+        karateca = None
+
+        # --------------------------------------------------
+        # 2. Tenta descobrir o karateca selecionado
+        #
+        # Quando o formulário é carregado:
+        #     self.data pode estar vazio.
+        #
+        # Quando o usuário seleciona um karateca:
+        #     self.data["karateca"] terá o ID.
+        # --------------------------------------------------
+
+        karateca_id = (
+            self.data.get("karateca")
+            or self.initial.get("karateca")
+        )
+
+        if karateca_id:
+
+            try:
+
+                karateca = (
+                    Karateca.objects
+                    .select_related("graduation")
+                    .get(pk=karateca_id)
+                )
+
+            except Karateca.DoesNotExist:
+
+                karateca = None
+
+        # --------------------------------------------------
+        # 3. Mostra a graduação atual
+        #
+        # SOMENTE PARA VISUALIZAÇÃO.
+        #
+        # Não estamos atribuindo esse valor ao campo
+        # current_graduation do Model.
+        # --------------------------------------------------
+
+        if karateca and karateca.graduation:
+
+            self.fields[
+                "current_graduation_display"
+            ].initial = (
+                karateca.graduation.name
+            )
+
+        else:
+
+            self.fields[
+                "current_graduation_display"
+            ].initial = (
+                "Sem graduação"
+            )
+
+        # --------------------------------------------------
+        # 4. Descobre a próxima graduação
+        # --------------------------------------------------
+
+        next_graduation = None
+
+        if karateca and karateca.graduation:
+
+            next_graduation = (
+                Graduation.objects
+                .filter(
+                    order__gt=karateca.graduation.order
+                )
+                .order_by("order")
+                .first()
+            )
+
+        # --------------------------------------------------
+        # 5. Mostra a próxima graduação
+        #
+        # SOMENTE PARA VISUALIZAÇÃO.
+        # --------------------------------------------------
+
+        if next_graduation:
+
+            self.fields[
+                "next_graduation_display"
+            ].initial = (
+                next_graduation.name
+            )
+
+        else:
+
+            self.fields[
+                "next_graduation_display"
+            ].initial = (
+                "Nenhuma graduação posterior"
+            )
+
+        # --------------------------------------------------
+        # 6. Filtra as categorias do exame
+        #
+        # Somente categorias cuja graduação de destino
+        # seja a próxima graduação do Karateca.
+        # --------------------------------------------------
+
+        if exam:
+
+            categories = exam.categories.all()
+
+            if next_graduation:
+
+                categories = categories.filter(
+                    to_graduation=next_graduation
+                )
+
+            self.fields["category"].queryset = categories
+
+        # --------------------------------------------------
+        # 7. Karatecas disponíveis
+        #
+        # Somente karatecas:
+        # - do dojo do exame
+        # - ativos
+        # --------------------------------------------------
+
+        if exam:
+
+            self.fields[
+                "karateca"
+            ].queryset = (
+                Karateca.objects
+                .filter(
+                    dojo=exam.dojo,
+                    active="ATIVO"
+                )
+                .select_related("graduation")
+                .order_by("name")
+            )
 
 # -------------------------------
 # EXAM RESULT

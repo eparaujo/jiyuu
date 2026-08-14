@@ -29,7 +29,7 @@ class ExamCategoryCreateView(LoginRequiredMixin, CreateView):
     form_class = forms.ExamCategoryForm
     success_url = reverse_lazy('examcategory_list')
 
-class ExamCategoryDetailView(LoginRequiredMixin, DeleteView):
+class ExamCategoryDetailView(LoginRequiredMixin, DetailView):
     model = models.ExamCategory
     template_name = 'examcategory_detail.html'
 

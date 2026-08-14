@@ -1,76 +1,211 @@
-from datetime import date
 from dateutil.relativedelta import relativedelta
 
-from .models import Exam, ExamEnrollment
+from .models import Exam, ExamEnrollment, ExamResult
 from graduations.models import Graduation
 
 
-def can_do_exam(*, karateca, exam: Exam, category):
+def get_next_graduation(current_graduation):
     """
-    Verifica se um karateca pode se inscrever em um exame
-    para uma determinada categoria.
+    Retorna a próxima graduação conforme a sequência definida
+    no campo Graduation.order.
     """
 
-    # ==================================================
-    # 1. Karateca precisa ter graduação atual
-    # ==================================================
-    current_graduation = getattr(karateca, "current_graduation", None)
     if not current_graduation:
-        return False, "Karateca não possui graduação atual."
+        return None
+
+    return (
+        Graduation.objects
+        .filter(
+            order__gt=current_graduation.order
+        )
+        .order_by("order")
+        .first()
+    )
+
+
+def can_do_exam(
+    *,
+    karateca,
+    exam: Exam,
+    category,
+    break_grace_period=False):
+    """
+    Verifica se o karateca pode se inscrever em um exame
+    para determinada categoria.
+
+    Retorna:
+        (True, mensagem)
+        ou
+        (False, mensagem)
+    """
 
     # ==================================================
-    # 2. Categoria precisa fazer parte do exame
+    # 1. Graduação atual
     # ==================================================
-    if not exam.categories.filter(id=category.id).exists():
-        return False, "Categoria não pertence a este exame."
 
-    # ==================================================
-    # 3. Graduação compatível com a categoria
-    # (ex: Amarela -> Laranja)
-    # ==================================================
-    if category.from_graduation != current_graduation:
+    current_graduation = karateca.graduation
+
+    if not current_graduation:
         return (
             False,
-            f"Graduação incompatível. Atual: {current_graduation.name}."
+            "Karateca não possui graduação atual."
         )
 
     # ==================================================
-    # 4. Não permitir dupla inscrição
+    # 2. Categoria pertence ao exame?
     # ==================================================
+
+    if not exam.categories.filter(
+        id=category.id
+    ).exists():
+
+        return (
+            False,
+            "A categoria selecionada não pertence a este exame."
+        )
+
+    # ==================================================
+    # 3. Categoria corresponde à próxima graduação?
+    # ==================================================
+
+    next_graduation = get_next_graduation(
+        current_graduation
+    )
+
+    if not next_graduation:
+
+        return (
+            False,
+            "Não existe uma próxima graduação cadastrada "
+            "para este karateca."
+        )
+
+    if category.to_graduation != next_graduation:
+
+        return (
+            False,
+            (
+                f"A categoria selecionada não corresponde "
+                f"à próxima graduação do karateca. "
+                f"Graduação atual: {current_graduation.name}. "
+                f"Próxima graduação esperada: "
+                f"{next_graduation.name}."
+            )
+        )
+
+    # ==================================================
+    # 4. Inscrição duplicada
+    # ==================================================
+
     if ExamEnrollment.objects.filter(
         exam=exam,
         karateca=karateca
     ).exists():
-        return False, "Karateca já está inscrito neste exame."
+
+        return (
+            False,
+            "Karateca já está inscrito neste exame."
+        )
 
     # ==================================================
-    # 5. Verificar carência (tempo mínimo entre exames)
+    # 5. Data da graduação
     # ==================================================
-    last_approved_exam = (
-        ExamEnrollment.objects
-        .filter(
-            karateca=karateca,
-            approved=True,
-            exam__status="FINALIZADO"
+
+    if not karateca.graduation_date:
+
+        return (
+            False,
+            (
+                "A data da graduação atual não está "
+                "cadastrada para este karateca."
+            )
         )
-        .select_related("exam")
-        .order_by("-exam__date")
-        .first()
+
+    # ==================================================
+    # 6. Carência
+    # ==================================================
+
+    eligible_date = (
+        karateca.graduation_date
+        + relativedelta(
+            months=current_graduation.min_months
+        )
     )
 
-    if last_approved_exam and category.min_months_interval:
-        min_date = last_approved_exam.exam.date + relativedelta(
-            months=category.min_months_interval
-        )
+    # ==================================================
+    # 7. Quebra de carência
+    # ==================================================
 
-        if exam.date < min_date:
+    if exam.date < eligible_date:
+
+        if not break_grace_period:
+
             return (
                 False,
-                f"Carência não cumprida. Próximo exame permitido após "
-                f"{min_date.strftime('%d/%m/%Y')}."
+                (
+                    f"Carência não cumprida. "
+                    f"Graduação atual: "
+                    f"{current_graduation.name}. "
+                    f"Carência mínima: "
+                    f"{current_graduation.min_months} meses. "
+                    f"Elegível a partir de "
+                    f"{eligible_date.strftime('%d/%m/%Y')}."
+                )
             )
 
     # ==================================================
-    # ✅ Todas as regras passaram
+    # 8. Apto
     # ==================================================
-    return True, "Karateca apto para o exame."
+
+    return (
+        True,
+        "Karateca apto para o exame."
+    )
+
+
+
+def calculate_exam_approval(enrollment):
+    """
+    Calcula se o karateca foi aprovado no exame.
+
+    Regra:
+    - Todas as matérias configuradas para a categoria do karateca
+      precisam possuir resultado.
+    - A nota obtida precisa ser >= min_score.
+    - max_score não participa da regra de aprovação.
+    """
+
+    requirements = enrollment.exam.requirements.filter(
+        category=enrollment.category
+    )
+
+    # Sem requisitos configurados, não aprova automaticamente.
+    if not requirements.exists():
+        enrollment.approved = False
+        enrollment.save(update_fields=["approved"])
+        return False
+
+    for requirement in requirements:
+
+        result = ExamResult.objects.filter(
+            enrollment=enrollment,
+            subject=requirement.subject
+        ).first()
+
+        # Ainda não existe nota para a matéria
+        if not result:
+            enrollment.approved = False
+            enrollment.save(update_fields=["approved"])
+            return False
+
+        # A nota mínima não foi atingida
+        if result.score < requirement.min_score:
+            enrollment.approved = False
+            enrollment.save(update_fields=["approved"])
+            return False
+
+    # Todas as matérias atingiram o mínimo
+    enrollment.approved = True
+    enrollment.save(update_fields=["approved"])
+
+    return True

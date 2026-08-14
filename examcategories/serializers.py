@@ -3,6 +3,16 @@ from examcategories.models import ExamCategory
 
 
 class ExamCategoriesSerializers(serializers.ModelSerializer):
-    class Meta:
+     name = serializers.CharField(
+        source="name_category",
+        read_only=True
+    )
+
+class Meta:
         model = ExamCategory
-        fields = '__all__'
+        fields = [
+            "id",
+            "name",
+            "name_category",
+            "description",
+        ]
