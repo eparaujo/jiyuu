@@ -6,7 +6,7 @@ class KaratecaForm(forms.ModelForm):
 
     class Meta:
         model = models.Karateca
-        fields = ['name', 'birth_date', 'genre', 'cpf', 'email', 'celphone', 'graduation', 'dan', 'dojo', 'active', 'monthly_fee', 'due_day']
+        fields = ['name', 'birth_date', 'genre', 'cpf', 'email', 'celphone', 'graduation', 'graduation_date', 'dan', 'dojo', 'active', 'monthly_fee', 'due_day']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'birth_date': forms.DateInput(attrs={'class': 'form-control','type': 'date' }),
@@ -15,6 +15,7 @@ class KaratecaForm(forms.ModelForm):
             'email': forms.TextInput(attrs={'class': 'form-control'}),
             'celphone':forms.TextInput(attrs={'class': 'form-control'}),
             'graduation': forms.Select(attrs={'class': 'form-control'}),
+            'graduation_date': forms.DateInput(attrs={'class': 'form-control','type': 'date'}),
             'dan': forms.Select(attrs={'class': 'form-control'}),
             'dojo': forms.Select(attrs={'class': 'form-control'}),
             'active': forms.Select(attrs={'class': 'form-control'}),
@@ -29,6 +30,7 @@ class KaratecaForm(forms.ModelForm):
             'email': 'Endereço de E-mail',
             'celPhone': 'Número do Telefone Celuar-Whatsapp',
             'graduation': 'Graduação',
+            'graduation_date': 'Data da última graduação',
             'dan': 'Definido quando se tratar de Faixa Preta',
             'dojo': 'Dojo',
             'active': 'Status',
