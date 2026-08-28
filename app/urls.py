@@ -43,6 +43,6 @@ urlpatterns = [
     path('', include('trainings.urls')),
     path('', include('financial.urls')),
     path('', include('genres.urls')),
-    
+    path('', include('technicalprograms.urls')),    
 ]
 

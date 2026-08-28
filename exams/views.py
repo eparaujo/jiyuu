@@ -877,6 +877,7 @@ class NextExamAPIView(APIView):
             )
             .prefetch_related(
                 "categories",
+                "categories__to_graduation",
                 "requirements__subject",
                 "enrollments__karateca",
                 "enrollments__category",

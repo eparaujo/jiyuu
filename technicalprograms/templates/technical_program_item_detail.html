@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3 class="display-6">
+        Detalhes do Conteúdo Técnico
+    </h3>
+
+    <div class="card">
+
+        <div class="card-body">
+
+            <h3 class="card-title">
+                {{ object.title }}
+            </h3>
+
+            <hr>
+
+            <p>
+                <strong>Programa:</strong>
+                {{ object.program.category.name_category }}
+            </p>
+
+            <p>
+                <strong>Estilo:</strong>
+                {{ object.program.get_style_display }}
+            </p>
+
+            <p>
+                <strong>Modalidade:</strong>
+                {{ object.get_modality_display }}
+            </p>
+
+            <p>
+                <strong>Ordem:</strong>
+                {{ object.sequence }}
+            </p>
+
+            <p>
+                <strong>Obrigatório:</strong>
+
+                {% if object.mandatory %}
+                    <span class="badge bg-primary">
+                        Sim
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary">
+                        Não
+                    </span>
+                {% endif %}
+
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+
+                {% if object.active %}
+                    <span class="badge bg-success">
+                        Ativo
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary">
+                        Inativo
+                    </span>
+                {% endif %}
+
+            </p>
+
+            {% if object.description %}
+
+                <hr>
+
+                <p>
+                    <strong>Descrição:</strong>
+                </p>
+
+                <p>
+                    {{ object.description|linebreaks }}
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <a
+        href="{% url 'technical_program_item_list' %}"
+        class="btn btn-secondary mt-3"
+    >
+        Voltar
+    </a>
+
+</div>
+
+{% endblock %}

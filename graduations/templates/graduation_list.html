@@ -29,8 +29,7 @@ SGK - Cadastro de Graduação de Faixa
 <div class="table-responsive">
     <table class="table table-striped table-bordered">
         <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
+            <tr>                
                 <th>Graduação - Faixa</th>
                 <th>Ordem de Graduações - ex. Branca = 1</th>
                 <th>Carência Mínima - em meses</th>
@@ -39,8 +38,7 @@ SGK - Cadastro de Graduação de Faixa
         </thead>
         <tbody>
             {% for graduation in graduations %}
-                <tr>
-                    <td> {{ graduation.id }} </td>
+                <tr>                    
                     <td> {{ graduation.name }} </td>
                     <td> {{ graduation.order }} </td>
                     <td> {{ graduation.min_months }} </td>

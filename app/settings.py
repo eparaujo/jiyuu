@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'django_crontab',
     'trainings',
     'financial',
+    'technicalprograms',
 ]
 
 LOGIN_URL = 'login'

@@ -18,7 +18,7 @@ class GraduationListView(LoginRequiredMixin, ListView):
     model = models.Graduation
     template_name = 'graduation_list.html'
     context_object_name ='graduations'
-    paginate_by = 10
+    paginate_by = 13
 
     def get_queryset(self):
         queryset = super().get_queryset()

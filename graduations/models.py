@@ -10,7 +10,7 @@ class Graduation(models.Model):
     )
 
     class Meta:
-        ordering = ['id']
+        ordering = ['order', 'id']
 
     def __str__(self):
         return self.name 

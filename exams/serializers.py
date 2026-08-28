@@ -400,7 +400,6 @@ class ExamSerializer(serializers.ModelSerializer):
 # -------------------------------------------------------------------------
 # Serializers de leitura (APP)
 # -------------------------------------------------------------------------
-
 class ExamParticipantReadSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(
         source="karateca.name",
@@ -408,12 +407,12 @@ class ExamParticipantReadSerializer(serializers.ModelSerializer):
     )
 
     kyu = serializers.CharField(
-        source="karateca.graduation",
+        source="karateca.graduation.name",
         read_only=True
     )
 
     belt = serializers.CharField(
-        source="karateca.graduation",
+        source="karateca.graduation.name",
         read_only=True
     )
 
@@ -464,18 +463,17 @@ class ExamCategoryDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_from_kyu(self, obj):
-        return (
-            obj.from_graduation
-            if hasattr(obj, "from_graduation")
-            else None
-        )
+        return None
 
     def get_to_kyu(self, obj):
-        return (
-            obj.to_graduation
-            if hasattr(obj, "to_graduation")
-            else None
-        )
+        if not obj.to_graduation:
+            return None
+
+        return {
+            "id": obj.to_graduation.id,
+            "name": obj.to_graduation.name,
+            "order": obj.to_graduation.order,
+        }
 
     def get_subjects(self, obj):
         exam = self.context.get("exam")
