@@ -29,8 +29,7 @@ SGK - Cadastro de Evento
 <div class="table-responsive">
     <table class="table table-striped table-bordered">
         <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
+            <tr>                
                 <th>Evento</th>
                 <th>Tipo</th>
                 <th>Nível</th>
@@ -54,7 +53,6 @@ SGK - Cadastro de Evento
         <tbody>
             {% for event in events %}
                 <tr>
-                    <td> {{ event.id }} </td>
                     <td> {{ event.name }} </td>
                     <td> {{ event.kind }} </td>
                     <td> {{ event.level }} </td>
@@ -64,14 +62,45 @@ SGK - Cadastro de Evento
                     <td> {{ event.local }} </td>
                     <td> {{ event.address }} </td>
                     <td> {{ event.description }} </td>
-                    <td> {{ event.hability_graduation }} </td>
-                    <td> {{ event.category }} </td>
-                    <td> {{ event.modalitiy }} </td>
+
+                    </td>
+
+                    <td>
+                        {% for hability_graduation in event.hability_graduation.all %}
+                            <span class="badge bg-info text-dark mb-1">
+                                {{ hability_graduation.name }}
+                            </span>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+                    
+                    <td>
+                        {% for category in event.category.all %}
+                            <span class="badge bg-info text-dark mb-1">
+                                {{ category.name }}
+                            </span>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+
+                    <td>
+                        {% for modality in event.modality.all %}
+                            <span class="badge bg-primary mb-1">
+                                {{ modality.name }}
+                            </span>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+
                     <td> {{ event.registration_fee }} </td>
                     <td> {{ event.limite_date }} </td>
                     <td> {{ event.organizer }} </td>
                     <td> {{ event.event_organizer }} </td>
                     <td> {{ event.status }} </td>
+                    
 
                     <td> 
                         <a href="{% url 'event_detail' event.id %}" class="btn btn-info btn-sm">

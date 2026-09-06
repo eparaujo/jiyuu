@@ -16,12 +16,33 @@ class ModalitySerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(many=True, read_only=True)
-    modality = ModalitySerializer(many=True, read_only=True)
+    category = serializers.SerializerMethodField()
+    modality = serializers.SerializerMethodField()
+    hability_graduation = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
         fields = "__all__"
+
+    def get_category(self, obj):
+        return [
+            category.name
+            for category in obj.category.all().order_by("name")
+        ]
+
+    def get_modality(self, obj):
+        return [
+            modality.name
+            for modality in obj.modality.all().order_by("name")
+        ]
+
+    def get_hability_graduation(self, obj):
+        graduations = obj.hability_graduation.all().order_by("order")
+
+        return [
+            f"Faixa {graduation.name}"
+            for graduation in graduations
+        ]
 
 
 class CourseEnrollmentSerializer(serializers.ModelSerializer):
