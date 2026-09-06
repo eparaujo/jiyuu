@@ -39,10 +39,22 @@ class EventSerializer(serializers.ModelSerializer):
     def get_hability_graduation(self, obj):
         graduations = obj.hability_graduation.all().order_by("order")
 
-        return [
-            f"Faixa {graduation.name}"
-            for graduation in graduations
-        ]
+        result = []
+
+        for graduation in graduations:
+            name = graduation.name.strip()
+
+            # Exemplo:
+            # "6º Kyu - Faixa Amarela"
+            # vira:
+            # "Faixa Amarela"
+            if " - " in name:
+                _, faixa = name.split(" - ", 1)
+                result.append(faixa)
+            else:
+                result.append(name)
+
+        return result
 
 
 class CourseEnrollmentSerializer(serializers.ModelSerializer):
