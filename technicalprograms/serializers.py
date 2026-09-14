@@ -23,6 +23,7 @@ class TechnicalProgramItemSerializer(serializers.ModelSerializer):
             "active",
         ]
 
+        
 class TechnicalProgramSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(
         source="category.name_category",
@@ -33,6 +34,8 @@ class TechnicalProgramSerializer(serializers.ModelSerializer):
         source="get_style_display",
         read_only=True
     )
+
+    target = serializers.SerializerMethodField()
 
     items = TechnicalProgramItemSerializer(
         many=True,
@@ -51,4 +54,32 @@ class TechnicalProgramSerializer(serializers.ModelSerializer):
             "description",
             "active",
             "items",
-        ]        
+        ]
+
+    def get_target(self, obj):
+        """
+        Monta automaticamente o percurso da graduação anterior
+        para a graduação de destino do programa.
+        """
+
+        if not obj.category or not obj.category.to_graduation:
+            return None
+
+        to_graduation = obj.category.to_graduation
+
+        # Busca a graduação imediatamente anterior
+        from graduations.models import Graduation
+
+        from_graduation = (
+            Graduation.objects
+            .filter(
+                order__lt=to_graduation.order
+            )
+            .order_by("-order", "-id")
+            .first()
+        )
+
+        if not from_graduation:
+            return to_graduation.name
+
+        return f"{from_graduation.name} → {to_graduation.name}"
