@@ -5,10 +5,8 @@ from django.shortcuts import render
 from . import views
 from authentication.views import CustomTokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView,)
+from django.views.generic import TemplateView
 
 
 urlpatterns = [
@@ -43,6 +41,7 @@ urlpatterns = [
     path('', include('trainings.urls')),
     path('', include('financial.urls')),
     path('', include('genres.urls')),
-    path('', include('technicalprograms.urls')),    
+    path('', include('technicalprograms.urls')),  
+    path('politica-privacidade/', TemplateView.as_view(template_name='components/privacy_policy.html'),name='privacy_policy',),  
 ]
 

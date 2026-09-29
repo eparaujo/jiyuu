@@ -85,7 +85,7 @@ class KaratecaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView
 class PublicKaratekaRegisterView(generics.CreateAPIView):
     queryset = models.Karateca.objects.all()
     serializer_class = serializers.PublicKaratekaRegisterSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny] 
 
 
 class KaratecaGraduationStatusAPIView(APIView): 
