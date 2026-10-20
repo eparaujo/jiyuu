@@ -331,7 +331,7 @@ class ExamRequirementDeleteView(LoginRequiredMixin, DeleteView):
 # EXAM ENROLLMENT LIST VIEW
 # -------------------------------
 class ExamEnrollmentListView(LoginRequiredMixin, ListView):
-    model = ExamEnrollment
+    model = ExamEnrollment 
     template_name = "enrollment_list.html"
     context_object_name = "enrollments"
 
@@ -567,7 +567,26 @@ class ExamEnrollmentUpdateView(LoginRequiredMixin, UpdateView):
 class ExamEnrollmentDeleteView(LoginRequiredMixin, DeleteView):
     model = models.ExamEnrollment
     template_name = "enrollment_delete.html"
-    success_url = reverse_lazy("enrollment_list")
+
+    def get_success_url(self):
+        # --------------------------------------------------
+        # Recupera o exame ao qual a inscrição pertence.
+        #
+        # O objeto ainda está disponível durante o processo
+        # de exclusão, permitindo recuperar o ID do exame.
+        # --------------------------------------------------
+
+        exam_id = self.object.exam_id
+
+        # --------------------------------------------------
+        # Retorna à lista de inscrições do mesmo exame,
+        # evitando acessar uma rota sem o exam_id necessário.
+        # --------------------------------------------------
+
+        return reverse_lazy(
+            "exam_enrollment_list",
+            kwargs={"exam_id": exam_id}
+        )
 
 # -------------------------------
 # VISUALIZAR KARATECAS INSCRITOS POR CATEGORIA DE GRADUAÇÃO
