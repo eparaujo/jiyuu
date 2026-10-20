@@ -15,12 +15,6 @@ urlpatterns = [
     path('subjects/<int:pk>/update/', views.ExamSubjectUpdateView.as_view(), name='subject_update'),
     path('subjects/<int:pk>/delete/', views.ExamSubjectDeleteView.as_view(), name='subject_delete'),
 
-    #path('requirements/list/', views.ExamRequirementListView.as_view(), name='requirement_list'),
-    #path('requirements/create/', views.ExamRequirementCreateView.as_view(), name='requirement_create'),
-    #path('requirements/<int:pk>/detail/', views.ExamRequirementDetailView.as_view(), name='requirement_detail'),
-    #path('requirements/<int:pk>/update/', views.ExamRequirementUpdateView.as_view(), name='requirement_update'),
-    #path('requirements/<int:pk>/delete/', views.ExamRequirementDeleteView.as_view(), name='requirement_delete'),
-
     path('enrollments/list/', views.ExamEnrollmentListView.as_view(), name='enrollment_list'),    
     path('enrollments/<int:pk>/detail/', views.ExamEnrollmentDetailView.as_view(), name='enrollment_detail'),
     path('enrollments/<int:pk>/update/', views.ExamEnrollmentUpdateView.as_view(), name='enrollment_update'),

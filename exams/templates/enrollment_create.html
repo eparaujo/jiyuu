@@ -69,14 +69,14 @@
 
             <!-- ==================================================
                  GRADUAÇÃO ATUAL
-                 
+
                  Campo somente para visualização.
-                 
+
                  IMPORTANTE:
                  Não utilizamos form.current_graduation aqui,
                  pois current_graduation é o ForeignKey real
                  do ExamEnrollment.
-                 
+
                  O campo exibido é:
                  current_graduation_display
                  ================================================== -->
@@ -96,9 +96,9 @@
 
             <!-- ==================================================
                  PRÓXIMA GRADUAÇÃO
-                 
+
                  Campo somente para visualização.
-                 
+
                  O campo exibido é:
                  next_graduation_display
                  ================================================== -->
@@ -178,5 +178,189 @@
     </div>
 
 </div>
+
+
+<!-- ==================================================
+     DADOS PARA ATUALIZAÇÃO AUTOMÁTICA DOS CAMPOS
+
+     graduation_data:
+     Contém a graduação atual e a próxima graduação
+     de cada karateca disponível para o exame.
+
+     exam_categories_data:
+     Contém as categorias vinculadas ao exame e
+     suas respectivas graduações de destino.
+
+     json_script converte os dados em JSON de forma
+     segura para utilização no JavaScript.
+     ================================================== -->
+
+{{ graduation_data|json_script:"graduation-data" }}
+{{ exam_categories_data|json_script:"exam-categories-data" }}
+
+
+<!-- ==================================================
+     ATUALIZAÇÃO AUTOMÁTICA DAS GRADUAÇÕES E CATEGORIAS
+     ================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // --------------------------------------------------
+    // 1. Identifica os campos do formulário
+    // --------------------------------------------------
+
+    const karatecaSelect = document.getElementById("id_karateca");
+
+    const currentGraduationInput = document.getElementById(
+        "id_current_graduation_display"
+    );
+
+    const nextGraduationInput = document.getElementById(
+        "id_next_graduation_display"
+    );
+
+    const categorySelect = document.getElementById("id_category");
+
+
+    // --------------------------------------------------
+    // 2. Carrega os dados enviados pela view Django
+    // --------------------------------------------------
+
+    const graduationData = JSON.parse(
+        document.getElementById("graduation-data").textContent
+    );
+
+    const categoriesData = JSON.parse(
+        document.getElementById("exam-categories-data").textContent
+    );
+
+
+    // --------------------------------------------------
+    // 3. Atualiza as graduações e as categorias
+    //    conforme o karateca selecionado
+    // --------------------------------------------------
+
+    function updateGraduations() {
+
+        const karatecaId = karatecaSelect.value;
+
+        const data = graduationData[karatecaId];
+
+        // Graduação atual do karateca.
+        currentGraduationInput.value = (
+            data?.current_name || ""
+        );
+
+        // Próxima graduação conforme a ordem cadastrada.
+        nextGraduationInput.value = (
+            data?.next_name || ""
+        );
+
+        const nextGraduationId = data?.next_id;
+
+        // Guarda a categoria anteriormente selecionada.
+        // Ela será mantida se continuar disponível.
+        const previousCategory = categorySelect.value;
+
+        // Limpa as opções atuais.
+        categorySelect.replaceChildren();
+
+        // Cria a opção inicial vazia.
+        const placeholder = document.createElement("option");
+
+        placeholder.value = "";
+        placeholder.textContent = "---------";
+
+        categorySelect.appendChild(placeholder);
+
+
+        // --------------------------------------------------
+        // 4. Filtra as categorias pela próxima graduação
+        //
+        // Somente categorias vinculadas ao exame e cuja
+        // graduação de destino corresponda à próxima
+        // graduação do karateca serão apresentadas.
+        // --------------------------------------------------
+
+        const availableCategories = categoriesData.filter(
+            function (category) {
+
+                return (
+                    nextGraduationId !== null &&
+                    nextGraduationId !== undefined &&
+                    String(category.to_graduation_id) ===
+                        String(nextGraduationId)
+                );
+
+            }
+        );
+
+
+        // --------------------------------------------------
+        // 5. Monta as opções de categoria
+        // --------------------------------------------------
+
+        availableCategories.forEach(function (category) {
+
+            const option = document.createElement("option");
+
+            option.value = category.id;
+            option.textContent = category.name;
+
+            categorySelect.appendChild(option);
+
+        });
+
+
+        // --------------------------------------------------
+        // 6. Define a categoria selecionada
+        //
+        // Se a categoria anterior continuar disponível,
+        // preserva a escolha do usuário.
+        //
+        // Caso contrário, seleciona a primeira categoria
+        // correspondente à próxima graduação.
+        // --------------------------------------------------
+
+        const previousCategoryAvailable = availableCategories.some(
+            function (category) {
+                return String(category.id) === previousCategory;
+            }
+        );
+
+        if (previousCategoryAvailable) {
+
+            categorySelect.value = previousCategory;
+
+        } else if (availableCategories.length > 0) {
+
+            categorySelect.value = String(
+                availableCategories[0].id
+            );
+
+        }
+
+    }
+
+
+    // --------------------------------------------------
+    // 7. Atualiza os campos ao trocar o karateca
+    // --------------------------------------------------
+
+    karatecaSelect.addEventListener(
+        "change",
+        updateGraduations
+    );
+
+
+    // --------------------------------------------------
+    // 8. Inicializa os campos ao abrir a página
+    // --------------------------------------------------
+
+    updateGraduations();
+
+});
+</script>
 
 {% endblock %}

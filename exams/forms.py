@@ -144,6 +144,7 @@ class ExamEnrollmentForm(forms.ModelForm):
             "category": "Categoria do Exame - Faixa",
         }
 
+    
     def __init__(self, *args, exam=None, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -151,18 +152,41 @@ class ExamEnrollmentForm(forms.ModelForm):
         self.exam = exam
 
         # --------------------------------------------------
-        # 1. Inicialmente não temos karateca selecionado
+        # 1. Karatecas disponíveis
+        #
+        # Somente karatecas:
+        # - do dojo do exame
+        # - ativos
+        #
+        # Configuramos o queryset antes de identificar
+        # o karateca selecionado.
+        # --------------------------------------------------
+
+        if exam:
+
+            self.fields["karateca"].queryset = (
+                Karateca.objects
+                .filter(
+                    dojo=exam.dojo,
+                    active="ATIVO"
+                )
+                .select_related("graduation")
+                .order_by("name")
+            )
+
+        # --------------------------------------------------
+        # 2. Inicialmente não temos karateca selecionado
         # --------------------------------------------------
 
         karateca = None
 
         # --------------------------------------------------
-        # 2. Tenta descobrir o karateca selecionado
+        # 3. Tenta descobrir o karateca selecionado
         #
         # Quando o formulário é carregado:
         #     self.data pode estar vazio.
         #
-        # Quando o usuário seleciona um karateca:
+        # Quando o formulário é enviado:
         #     self.data["karateca"] terá o ID.
         # --------------------------------------------------
 
@@ -181,12 +205,16 @@ class ExamEnrollmentForm(forms.ModelForm):
                     .get(pk=karateca_id)
                 )
 
-            except Karateca.DoesNotExist:
+            except (
+                Karateca.DoesNotExist,
+                ValueError,
+                TypeError
+            ):
 
                 karateca = None
 
         # --------------------------------------------------
-        # 3. Mostra a graduação atual
+        # 4. Mostra a graduação atual
         #
         # SOMENTE PARA VISUALIZAÇÃO.
         #
@@ -194,73 +222,72 @@ class ExamEnrollmentForm(forms.ModelForm):
         # current_graduation do Model.
         # --------------------------------------------------
 
-        if karateca and karateca.graduation:
+        current_graduation = (
+            karateca.graduation
+            if karateca
+            else None
+        )
 
-            self.fields[
-                "current_graduation_display"
-            ].initial = (
-                karateca.graduation.name
-            )
-
-        else:
-
-            self.fields[
-                "current_graduation_display"
-            ].initial = (
-                "Sem graduação"
-            )
+        self.fields[
+            "current_graduation_display"
+        ].initial = (
+            current_graduation.name
+            if current_graduation
+            else ""
+        )
 
         # --------------------------------------------------
-        # 4. Descobre a próxima graduação
+        # 5. Descobre a próxima graduação
+        #
+        # Utiliza a ordem das graduações cadastradas.
+        # O ID serve como critério secundário de ordenação.
         # --------------------------------------------------
 
         next_graduation = None
 
-        if karateca and karateca.graduation:
+        if current_graduation:
 
             next_graduation = (
                 Graduation.objects
                 .filter(
-                    order__gt=karateca.graduation.order
+                    order__gt=current_graduation.order
                 )
-                .order_by("order")
+                .order_by("order", "id")
                 .first()
             )
 
         # --------------------------------------------------
-        # 5. Mostra a próxima graduação
+        # 6. Mostra a próxima graduação
         #
         # SOMENTE PARA VISUALIZAÇÃO.
         # --------------------------------------------------
 
-        if next_graduation:
-
-            self.fields[
-                "next_graduation_display"
-            ].initial = (
-                next_graduation.name
-            )
-
-        else:
-
-            self.fields[
-                "next_graduation_display"
-            ].initial = (
-                "Nenhuma graduação posterior"
-            )
+        self.fields[
+            "next_graduation_display"
+        ].initial = (
+            next_graduation.name
+            if next_graduation
+            else ""
+        )
 
         # --------------------------------------------------
-        # 6. Filtra as categorias do exame
+        # 7. Filtra as categorias do exame
         #
-        # Somente categorias cuja graduação de destino
-        # seja a próxima graduação do Karateca.
+        # No GET:
+        # - Exibe somente categorias cuja graduação de
+        #   destino seja a próxima graduação do karateca.
+        #
+        # No POST:
+        # - Mantém as categorias do exame no queryset para
+        #   permitir a validação da opção enviada.
+        # - A view deve validar a categoria escolhida.
         # --------------------------------------------------
 
         if exam:
 
             categories = exam.categories.all()
 
-            if next_graduation:
+            if next_graduation and not self.is_bound:
 
                 categories = categories.filter(
                     to_graduation=next_graduation
@@ -268,27 +295,6 @@ class ExamEnrollmentForm(forms.ModelForm):
 
             self.fields["category"].queryset = categories
 
-        # --------------------------------------------------
-        # 7. Karatecas disponíveis
-        #
-        # Somente karatecas:
-        # - do dojo do exame
-        # - ativos
-        # --------------------------------------------------
-
-        if exam:
-
-            self.fields[
-                "karateca"
-            ].queryset = (
-                Karateca.objects
-                .filter(
-                    dojo=exam.dojo,
-                    active="ATIVO"
-                )
-                .select_related("graduation")
-                .order_by("name")
-            )
 
 # -------------------------------
 # EXAM RESULT

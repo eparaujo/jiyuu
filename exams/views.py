@@ -30,6 +30,8 @@ from django.utils.timezone import now
 from datetime import timedelta
 from django.db.models import Q
 from decimal import Decimal
+from graduations.models import Graduation
+from django.db.models import Q
 
 
 # -------------------------------
@@ -372,13 +374,75 @@ class ExamEnrollmentCreateView(LoginRequiredMixin, CreateView):
 
         return kwargs
 
+    
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
 
         context["exam"] = self.exam
 
+        form = context["form"]
+
+        # Monta os dados de graduação para os karatecas
+        # que podem ser inscritos neste exame.
+        graduation_data = {}
+
+        karatecas = form.fields["karateca"].queryset
+
+        for karateca in karatecas:
+            current = karateca.graduation
+            next_graduation = None
+
+            if current:
+                next_graduation = (
+                    Graduation.objects
+                    .filter(order__gt=current.order)
+                    .order_by("order", "id")
+                    .first()
+                )
+
+            graduation_data[str(karateca.pk)] = {
+                "current_name": (
+                    current.name if current else ""
+                ),
+                "next_name": (
+                    next_graduation.name
+                    if next_graduation else ""
+                ),
+                "next_id": (
+                    next_graduation.pk
+                    if next_graduation else None
+                ),
+            }
+
+        context["graduation_data"] = graduation_data
+
+                # --------------------------------------------------
+        # Disponibiliza as categorias vinculadas ao exame.
+        #
+        # O JavaScript utiliza to_graduation_id para exibir
+        # as categorias correspondentes à próxima graduação
+        # do karateca selecionado.
+        # --------------------------------------------------
+
+        categories = (
+            self.exam.categories
+            .select_related("to_graduation")
+            .all()
+        )
+
+        context["exam_categories_data"] = [
+            {
+                "id": category.pk,
+                "name": str(category),
+                "to_graduation_id": (
+                    category.to_graduation_id
+                ),
+            }
+            for category in categories
+        ]
+
         return context
+
 
     def form_valid(self, form):
 
@@ -681,16 +745,16 @@ class ExamRetrieveUpdateDestroyAPIView(
 
         return context
 
-    
 
 class ExamCreateListAPIView(generics.ListCreateAPIView):
     """
-    GET: Lista todos os exames.
+    GET: Lista exames que não foram finalizados ou cancelados.
     POST: Cria um novo exame.
     """
-    queryset = models.Exam.objects.all()
+    queryset = models.Exam.objects.exclude(
+        status__in=['FINALIZADO', 'CANCELADO']
+    )
     serializer_class = serializers.ExamSerializer
-
     
  # API específica para salvar notas de um participante
 class ExamEnrollmentUpdateAPIView(generics.RetrieveUpdateAPIView):
