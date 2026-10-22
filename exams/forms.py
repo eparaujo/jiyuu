@@ -287,13 +287,19 @@ class ExamEnrollmentForm(forms.ModelForm):
 
             categories = exam.categories.all()
 
+            self.fields["category"].queryset = categories
+
+            # Seleciona por padrão a categoria cuja graduação
+            # de destino corresponde à próxima graduação.
             if next_graduation and not self.is_bound:
 
-                categories = categories.filter(
+                default_category = categories.filter(
                     to_graduation=next_graduation
-                )
+                ).first()
 
-            self.fields["category"].queryset = categories
+                if default_category:
+                    self.fields["category"].initial = default_category.pk
+
 
 
 # -------------------------------
