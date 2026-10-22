@@ -59,7 +59,7 @@ class ExamRequirementWithResultSerializer(serializers.ModelSerializer):
         ).first()
 
         return result.score if result else 0
-
+ 
 
 # -----------------------------------------------------------------------------
 # Serializer para os participantes do exame
@@ -475,21 +475,33 @@ class ExamCategoryDetailSerializer(serializers.ModelSerializer):
             "order": obj.to_graduation.order,
         }
 
+    
     def get_subjects(self, obj):
         exam = self.context.get("exam")
 
         if not exam:
             return []
 
+        # --------------------------------------------------
+        # Retorna somente as matérias obrigatórias do exame.
+        #
+        # O min_score deve ser diferente de zero para que
+        # a matéria seja enviada ao aplicativo Shinsa.
+        #
+        # Mantém o filtro pelo exame e pela categoria.
+        # --------------------------------------------------
+
         requirements = ExamRequirement.objects.filter(
             exam=exam,
-            category=obj
+            category=obj,
+            min_score__gt=0
         )
 
         return ExamRequirementReadSerializer(
             requirements,
             many=True
         ).data
+
 
     def get_registrations(self, obj):
         exam = self.context.get("exam")
