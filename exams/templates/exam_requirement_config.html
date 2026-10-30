@@ -1,10 +1,117 @@
 {% extends "base.html" %}
-
+{% load l10n %}
 {% block title %}
 Configuração das Matérias do Exame
 {% endblock %}
 
 {% block content %}
+
+<style>
+    /* =========================================
+    CAMPOS DE NOTAS
+    ========================================= */
+
+    .score-input {
+        width: 100%;
+        min-width: 70px;
+        height: 32px;
+        padding: 2px 1px;
+        font-size: 12px;
+        line-height: 1;
+        text-align: center;
+        box-sizing: border-box;
+        border-radius: 4px;
+    }
+
+    /* Remove setas dos campos numéricos */
+    .score-input::-webkit-inner-spin-button,
+    .score-input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+
+    /* =========================================
+    TABELA
+    ========================================= */
+
+    .table {
+        margin-bottom: 0;
+        width: 100%;
+    }
+
+    .table th,
+    .table td {
+        padding: 4px 3px;
+        vertical-align: middle;
+    }
+
+    /* Largura mínima das colunas de notas */
+    .table tbody td:not(:first-child) {
+        min-width: 68px;
+    }
+
+    /* =========================================
+    CABEÇALHOS
+    ========================================= */
+
+    .table thead th {
+        font-size: 12px;
+        padding: 5px 3px;
+        white-space: nowrap;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .table thead th:first-child {
+        text-align: left;
+        min-width: 140px;
+    }
+
+    /* =========================================
+    NOMES DAS MATÉRIAS
+    ========================================= */
+
+    .table tbody td:first-child {
+        font-size: 12px;
+        font-weight: 600;
+        min-width: 140px;
+        padding-left: 6px;
+        white-space: nowrap;
+    }
+
+    /* =========================================
+    RESPONSIVIDADE
+    ========================================= */
+
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    @media (max-width: 768px) {
+
+        .table thead th {
+            font-size: 11px;
+        }
+
+        .table tbody td:first-child {
+            font-size: 11px;
+            min-width: 110px;
+        }
+
+        .table tbody td:not(:first-child) {
+            min-width: 65px;
+        }
+
+        .score-input {
+            min-width: 60px;
+            height: 30px;
+            font-size: 10px;
+        }
+    }
+
+</style>
 
 <div class="container-fluid">
 
@@ -21,6 +128,7 @@ Configuração das Matérias do Exame
             <div class="text-muted">
 
                 {{ exam }}
+                | ID do exame: {{ exam.pk }}
 
             </div>
 
@@ -44,17 +152,11 @@ Configuração das Matérias do Exame
 
 
     {% if messages %}
-
         {% for message in messages %}
-
-            <div class="alert alert-success">
-
+            <div class="alert alert-{{ message.tags }}">
                 {{ message }}
-
             </div>
-
         {% endfor %}
-
     {% endif %}
 
 
@@ -151,7 +253,7 @@ Configuração das Matérias do Exame
 
                                         name="min_{{ row.subject.id }}_{{ score.category.id }}"
 
-                                        value="{{ score.min_score }}">
+                                        value="{{ score.min_score|unlocalize }}">
 
                                 </td>
 
@@ -171,7 +273,7 @@ Configuração das Matérias do Exame
 
                                         name="max_{{ row.subject.id }}_{{ score.category.id }}"
 
-                                        value="{{ score.max_score }}">
+                                        value="{{ score.max_score|unlocalize }}">
 
                                 </td>
 

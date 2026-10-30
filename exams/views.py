@@ -28,8 +28,8 @@ from .forms import ExamEnrollmentForm
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 from datetime import timedelta
-from django.db.models import Q
-from decimal import Decimal
+from django.db import transaction
+from decimal import Decimal, InvalidOperation
 from graduations.models import Graduation
 from django.db.models import Q
 
@@ -416,7 +416,7 @@ class ExamEnrollmentCreateView(LoginRequiredMixin, CreateView):
 
         context["graduation_data"] = graduation_data
 
-                # --------------------------------------------------
+        # --------------------------------------------------
         # Disponibiliza as categorias vinculadas ao exame.
         #
         # O JavaScript utiliza to_graduation_id para exibir
@@ -992,15 +992,16 @@ class ExamRequirementConfigView(LoginRequiredMixin, View):
         subjects = list(
             ExamSubject.objects.all().order_by("name")
         )
-
+        
         requirements = ExamRequirement.objects.filter(
             exam=exam
-        )
+        ).select_related("category", "subject")
 
         requirement_map = {
             (r.category_id, r.subject_id): r
             for r in requirements
         }
+
 
         rows = []
 
@@ -1015,31 +1016,26 @@ class ExamRequirementConfigView(LoginRequiredMixin, View):
                 )
 
                 scores.append({
-
                     "category": category,
-
-                    "min_score": requirement.min_score if requirement else "",
-
-                    "max_score": requirement.max_score if requirement else "",
-
+                    "min_score": (
+                        requirement.min_score
+                        if requirement else ""
+                    ),
+                    "max_score": (
+                        requirement.max_score
+                        if requirement else ""
+                    ),
                 })
 
             rows.append({
-
                 "subject": subject,
-
                 "scores": scores,
-
             })
-
+            
         return {
-
             "exam": exam,
-
             "categories": categories,
-
             "rows": rows,
-
         }
 
     def get(self, request, pk):
@@ -1055,6 +1051,7 @@ class ExamRequirementConfigView(LoginRequiredMixin, View):
             self.build_context(exam)
         )
 
+    @transaction.atomic
     def post(self, request, pk):
 
         exam = get_object_or_404(
@@ -1063,51 +1060,83 @@ class ExamRequirementConfigView(LoginRequiredMixin, View):
         )
 
         categories = exam.categories.all()
-
         subjects = ExamSubject.objects.all()
 
-        for category in categories:
+        try:
 
-            for subject in subjects:
+            for category in categories:
 
-                min_value = request.POST.get(
-                    f"min_{subject.id}_{category.id}"
-                )
+                for subject in subjects:
 
-                max_value = request.POST.get(
-                    f"max_{subject.id}_{category.id}"
-                )
+                    min_value = request.POST.get(
+                        f"min_{subject.id}_{category.id}", ""
+                    ).strip()
 
-                if (
-                    min_value == ""
-                    and
-                    max_value == ""
-                ):
-                    ExamRequirement.objects.filter(
+                    max_value = request.POST.get(
+                        f"max_{subject.id}_{category.id}", ""
+                    ).strip()
+
+                    # Ambos vazios: remove a configuração
+                    if not min_value and not max_value:
+
+                        ExamRequirement.objects.filter(
+                            exam=exam,
+                            category=category,
+                            subject=subject,
+                        ).delete()
+
+                        continue
+
+                    # Não permite configuração incompleta
+                    if not min_value or not max_value:
+
+                        raise ValueError(
+                            f"Informe a nota mínima e máxima "
+                            f"para {subject.name} - {category}."
+                        )
+
+                    min_score = Decimal(min_value)
+                    max_score = Decimal(max_value)
+
+                    # Validação das notas
+                    if min_score < 0 or max_score > 10:
+
+                        raise ValueError(
+                            f"Notas inválidas para {subject.name}."
+                        )
+
+                    if min_score > max_score:
+
+                        raise ValueError(
+                            f"A nota mínima não pode ser maior "
+                            f"que a máxima em {subject.name} - {category}."
+                        )
+
+                    ExamRequirement.objects.update_or_create(
+
                         exam=exam,
                         category=category,
                         subject=subject,
-                    ).delete()
 
-                    continue
+                        defaults={
+                            "min_score": min_score,
+                            "max_score": max_score,
+                        }
 
-                ExamRequirement.objects.update_or_create(
+                    )
 
-                    exam=exam,
+        except (ValueError, InvalidOperation) as e:
 
-                    category=category,
+            messages.error(
+                request,
+                str(e)
+            )
 
-                    subject=subject,
-
-                    defaults={
-
-                        "min_score": Decimal(min_value),
-
-                        "max_score": Decimal(max_value),
-
-                    }
-
-                )
+            return render(
+                request,
+                self.template_name,
+                self.build_context(exam)
+            )
 
         messages.success(
             request,
@@ -1117,4 +1146,4 @@ class ExamRequirementConfigView(LoginRequiredMixin, View):
         return redirect(
             "exam_requirement_config",
             pk=exam.pk
-        )   
+        )

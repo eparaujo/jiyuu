@@ -103,7 +103,8 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
 
     def get_subjects(self, obj):
         requirements = obj.exam.requirements.filter(
-            category=obj.category
+            category=obj.category,
+            min_score__gt=0
         )
 
         return ExamRequirementWithResultSerializer(
