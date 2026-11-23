@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Exam, ExamEnrollment, ExamResult, ExamRequirement, ExamCategory
 from senseis.models import Sensei
+from django.db import transaction
 from dojos.models import DojoMembership
 from dojos.choices import DojoRole
 from rest_framework.exceptions import PermissionDenied
@@ -9,14 +10,23 @@ from rest_framework.exceptions import PermissionDenied
 # -----------------------------------------------------------------------------
 # Serializer para resultados individuais (input/output das notas e comentários)
 # -----------------------------------------------------------------------------
+
 class ExamResultSerializer(serializers.ModelSerializer):
-    subject_name = serializers.CharField(source="subject.name", read_only=True)
-    sensei_examiner_name = serializers.CharField(
-        source="sensei_examiner.name", read_only=True
+
+    subject_name = serializers.CharField(
+        source="subject.name",
+        read_only=True
     )
+
+    subject_id = serializers.IntegerField(
+        read_only=True
+    )
+
+    sensei_examiner_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ExamResult
+
         fields = [
             "id",
             "subject",
@@ -28,6 +38,17 @@ class ExamResultSerializer(serializers.ModelSerializer):
             "sensei_examiner_name",
         ]
 
+        read_only_fields = [
+            "id",
+            "subject_id",
+            "subject_name",
+            "sensei_examiner",
+            "sensei_examiner_name",
+        ]
+
+    def get_sensei_examiner_name(self, obj):
+        return obj.sensei_examiner or ""
+
 
 # -----------------------------------------------------------------------------
 # Serializer para as matérias (requirements) de cada exame
@@ -35,7 +56,10 @@ class ExamResultSerializer(serializers.ModelSerializer):
 class ExamRequirementWithResultSerializer(serializers.ModelSerializer):
     subject_id = serializers.IntegerField(source="subject.id", read_only=True)
     subject_name = serializers.CharField(source="subject.name", read_only=True)
+
     score = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
+    result_id = serializers.SerializerMethodField()
 
     class Meta:
         model = ExamRequirement
@@ -45,20 +69,32 @@ class ExamRequirementWithResultSerializer(serializers.ModelSerializer):
             "min_score",
             "max_score",
             "score",
+            "comments",
+            "result_id",
         ]
 
-    def get_score(self, obj):
+    def get_result(self, obj):
         enrollment = self.context.get("enrollment")
 
         if not enrollment:
-            return 0
+            return None
 
-        result = ExamResult.objects.filter(
+        return ExamResult.objects.filter(
             enrollment=enrollment,
             subject=obj.subject
         ).first()
 
-        return result.score if result else 0
+    def get_score(self, obj):
+        result = self.get_result(obj)
+        return result.score if result else None
+
+    def get_comments(self, obj):
+        result = self.get_result(obj)
+        return result.comments if result else ""
+
+    def get_result_id(self, obj):
+        result = self.get_result(obj)
+        return result.id if result else None
  
 
 # -----------------------------------------------------------------------------
@@ -76,7 +112,7 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
     )
 
     category_name = serializers.CharField(
-        source="category.name",
+        source="category.name_category",
         read_only=True
     )
 
@@ -113,19 +149,12 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
             context={"enrollment": obj}
         ).data
 
+    
     def get_approved(self, obj):
-        """
-        Considera o karateca aprovado somente se:
-
-        1. Existirem requisitos configurados para a categoria;
-        2. Existir resultado para todas as matérias;
-        3. A nota de cada matéria for >= min_score.
-
-        O max_score NÃO participa da regra de aprovação.
-        """
 
         requirements = obj.exam.requirements.filter(
-            category=obj.category
+            category=obj.category,
+            min_score__gt=0
         )
 
         if not requirements.exists():
@@ -138,25 +167,58 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
                 subject=req.subject
             ).first()
 
-            # Não possui nota para a matéria
             if not result:
                 return False
 
-            # Nota abaixo do mínimo exigido
             if result.score < req.min_score:
                 return False
 
         return True
 
+
+    def validate_results(self, value):
+
+        if not self.instance:
+            return value
+
+        enrollment = self.instance
+
+        requirements = enrollment.exam.requirements.filter(
+            category=enrollment.category,
+            min_score__gt=0
+        )
+
+        valid_subjects = {
+            requirement.subject_id: requirement
+            for requirement in requirements
+        }
+
+        for result_data in value:
+
+            subject = result_data["subject"]
+
+            requirement = valid_subjects.get(subject.id)
+
+            if not requirement:
+                raise serializers.ValidationError(
+                    f"A matéria {subject.name} não está configurada "
+                    "para esta categoria."
+                )
+
+            score = result_data["score"]
+
+            if score > requirement.max_score:
+
+                raise serializers.ValidationError(
+                    f"A nota de {subject.name} não pode ultrapassar "
+                    f"{requirement.max_score}."
+                )
+
+        return value
+
+
+    @transaction.atomic
     def update(self, instance, validated_data):
-        """
-        Atualiza os resultados do exame e, ao final, recalcula:
-
-        - aprovação da inscrição;
-        - graduação do karateca, caso aprovado.
-
-        A aprovação considera somente o min_score de cada requisito.
-        """
 
         results_data = validated_data.pop("results", None)
 
@@ -165,103 +227,90 @@ class ExamEnrollmentSerializer(serializers.ModelSerializer):
         sensei_name = "Desconhecido"
 
         if request and request.user.is_authenticated:
+
             sensei_name = (
                 request.user.get_full_name()
                 or request.user.username
             )
 
-        # ==============================================================
-        # 1. Atualiza os resultados das matérias
-        # ==============================================================
+        # ==================================================
+        # 1. Atualiza somente os resultados enviados
+        # ==================================================
 
-        if results_data:
+        if results_data is not None:
 
             for result_data in results_data:
 
                 subject = result_data["subject"]
-                score = result_data.get("score", 0)
-                comments = result_data.get("comments", "")
+                score = result_data["score"]
+
+                defaults = {
+                    "score": score,
+                    "sensei_examiner": sensei_name,
+                }
+
+                # Não apaga comentários quando não forem enviados.
+                if "comments" in result_data:
+                    defaults["comments"] = result_data["comments"]
 
                 ExamResult.objects.update_or_create(
+
                     enrollment=instance,
+
                     subject=subject,
-                    defaults={
-                        "score": score,
-                        "comments": comments,
-                        "sensei_examiner": sensei_name,
-                    },
+
+                    defaults=defaults,
                 )
 
-        # ==============================================================
-        # 2. Atualiza os demais campos da inscrição
-        # ==============================================================
+        # ==================================================
+        # 2. Atualiza outros campos da inscrição
+        # ==================================================
 
         for attr, value in validated_data.items():
+
             setattr(instance, attr, value)
 
         instance.save()
 
-        # ==============================================================
-        # 3. Recalcula aprovação
-        # ==============================================================
+        # ==================================================
+        # 3. Recalcula a aprovação
+        # ==================================================
 
         requirements = instance.exam.requirements.filter(
-            category=instance.category
+            category=instance.category,
+            min_score__gt=0
         )
 
-        approved = True
+        approved = requirements.exists()
 
-        # Sem requisitos configurados, não aprova
-        if not requirements.exists():
-            approved = False
+        for req in requirements:
 
-        else:
+            result = ExamResult.objects.filter(
+                enrollment=instance,
+                subject=req.subject
+            ).first()
 
-            for req in requirements:
+            if not result or result.score < req.min_score:
 
-                result = ExamResult.objects.filter(
-                    enrollment=instance,
-                    subject=req.subject
-                ).first()
+                approved = False
+                break
 
-                # Não existe resultado para uma matéria obrigatória
-                if not result:
-                    approved = False
-                    break
-
-                # Somente o min_score determina aprovação
-                if result.score < req.min_score:
-                    approved = False
-                    break
-
-        # ==============================================================
-        # 4. Persiste o resultado da aprovação
-        # ==============================================================
+        # ==================================================
+        # 4. Persiste a aprovação
+        # ==================================================
 
         instance.approved = approved
+
         instance.save(
             update_fields=["approved"]
         )
 
-        # ==============================================================
-        # 5. Se aprovado, atualiza a graduação do karateca
-        # ==============================================================
+        # ==================================================
+        # 5. Não altera a graduação neste momento
+        # ==================================================
 
-        if (
-            approved
-            and instance.category
-            and instance.category.to_graduation
-        ):
-
-            karateca = instance.karateca
-
-            # Evita update desnecessário
-            if karateca.graduation != instance.category.to_graduation:
-
-                karateca.graduation = instance.category.to_graduation
-                karateca.save(
-                    update_fields=["graduation"]
-                )
+        # A promoção de graduação será realizada
+        # somente quando o exame for finalizado.
 
         return instance
 
@@ -372,7 +421,8 @@ class ExamSerializer(serializers.ModelSerializer):
                 if participant_id:
 
                     enrollment = ExamEnrollment.objects.get(
-                        id=participant_id
+                        id=participant_id,
+                        exam=instance
                     )
 
                     serializer = ExamEnrollmentSerializer(

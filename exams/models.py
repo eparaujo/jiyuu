@@ -145,5 +145,13 @@ class ExamResult(models.Model):
     comments = models.TextField(max_length=250, blank=True, null=True)
     sensei_examiner = models.CharField(max_length=250, blank=True, null=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["enrollment", "subject"],
+                name="unique_exam_result_per_subject"
+            )
+        ]
+
     def __str__(self):
         return f"{self.enrollment.karateca} - {self.subject}: {self.score}"
